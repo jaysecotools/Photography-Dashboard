@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Photography Tools</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        
+        .tagline {
+            font-style: italic;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 3rem 0;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .tool-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 4px solid var(--accent);
+        }
+        
+        .tool-content {
+            padding: 1.5rem;
+        }
+        
+        .tool-content h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--accent);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #c0392b;
+        }
+        
+        footer {
+            background-color: var(--secondary);
+            color: white;
+            text-align: center;
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Film Photography Tools</h1>
+            <p class="tagline">Essential calculators for analog photographers</p>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="tools-grid">
+            <!-- Reciprocity Calculator -->
+            <div class="tool-card">
+                <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Reciprocity Failure">
+                <div class="tool-content">
+                    <h3>Reciprocity Calculator</h3>
+                    <p>Calculate adjusted exposure times to compensate for reciprocity failure in long exposures with film.</p>
+                    <a href="/reciprocity" class="btn">Use Tool</a>
+                </div>
+            </div>
+            
+            <!-- Sunny 16 Calculator -->
+            <div class="tool-card">
+                <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Sunny 16 Rule">
+                <div class="tool-content">
+                    <h3>Sunny 16 Calculator</h3>
+                    <p>Determine proper exposure settings without a light meter using the classic Sunny 16 rule.</p>
+                    <a href="/sunny16" class="btn">Use Tool</a>
+                </div>
+            </div>
+            
+            <!-- Film Developer Calculator/Timer -->
+            <div class="tool-card">
+                <img src="https://images.unsplash.com/photo-1568513369-9a34d47a0520?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Film Development">
+                <div class="tool-content">
+                    <h3>Film Developer Timer</h3>
+                    <p>Calculate development times with temperature compensation and get precise timers for your film processing.</p>
+                    <a href="/developer" class="btn">Use Tool</a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 Film Photography Tools | Created for analog photographers</p>
+        </div>
+    </footer>
+</body>
+</html>
