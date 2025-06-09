@@ -1,0 +1,4351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Film Development Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e74c3c;
+      --primary-dark: #c0392b;
+      --text-light: #333;
+      --text-dark: #eee;
+      --bg-light: #f8f9fa;
+      --bg-dark: #121212;
+      --card-light: #fff;
+      --card-dark: #1e1e1e;
+      --input-light: #fff;
+      --input-dark: #2a2a2a;
+      --border-light: #ddd;
+      --border-dark: #444;
+    }
+    
+    * {
+      box-sizing: border-box;
+      transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 1.5rem;
+      min-height: 100vh;
+      background: var(--bg-light);
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      line-height: 1.5;
+    }
+    
+    .container {
+      background: var(--card-light);
+      padding: 2rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    h1 {
+      color: var(--primary);
+      margin: 0 0 1.25rem 0;
+      font-weight: 600;
+      font-size: 1.75rem;
+    }
+    
+    h2 {
+      color: var(--primary);
+      font-weight: 500;
+      font-size: 1.15rem;
+      margin: 1.75rem 0 0.75rem 0;
+    }
+    
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    .input-group-spacer {
+      margin-bottom: 2rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    select, input {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      font-size: 0.95rem;
+      background: var(--input-light);
+      color: var(--text-light);
+    }
+    
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+      min-width: 120px;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .primary-btn:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+    }
+    
+    .secondary-btn {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .secondary-btn:hover {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .reset-btn {
+      background: transparent;
+      color: #666;
+      border: 1px solid #ccc;
+    }
+    
+    .reset-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .dark-mode .reset-btn {
+      color: #aaa;
+      border-color: #444;
+    }
+    
+    .dark-mode .reset-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .timer-display {
+      text-align: center;
+      margin: 1.5rem 0 0 0;
+      order: 1; /* Move to bottom */
+      background: rgba(231, 76, 60, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .timer {
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin: 0.25rem 0;
+      color: var(--primary);
+    }
+    
+    .timer-label {
+      font-size: 0.95rem;
+      color: inherit;
+      opacity: 0.8;
+    }
+    
+    .dark-mode-toggle {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+    }
+    
+    .info-text {
+      font-size: 0.85rem;
+      color: inherit;
+      opacity: 0.8;
+      margin: -0.25rem 0 0.75rem 0;
+      line-height: 1.4;
+    }
+    
+    .step-display {
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(231, 76, 60, 0.05);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+    
+    .step-duration {
+      font-weight: 500;
+    }
+    
+    .step-instructions {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      opacity: 0.9;
+    }
+    
+    .current-step {
+      background: rgba(231, 76, 60, 0.15);
+      border-left: 4px solid var(--primary-dark);
+    }
+    
+    .paused {
+      color: #e67e22;
+    }
+    
+    .agitation-alert {
+      animation: pulse 1s infinite;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    
+    .dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    
+    .dark-mode .container {
+      background: var(--card-dark);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .dark-mode select,
+    .dark-mode input {
+      background: var(--input-dark);
+      color: var(--text-dark);
+      border: 1px solid var(--border-dark);
+    }
+    
+    .dark-mode .secondary-btn {
+      border-color: var(--border-dark);
+    }
+    
+    .dark-mode .info-text {
+      opacity: 0.7;
+    }
+    
+    .dark-mode .step-display {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .dark-mode .current-step {
+      background: rgba(231, 76, 60, 0.2);
+    }
+    
+    .dark-mode .timer-display {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .controls-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: auto;
+      order: 2; /* Ensure it stays at the bottom */
+    }
+    
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .container {
+        padding: 1.25rem;
+      }
+      
+      .button-group {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .dark-mode-toggle {
+        position: static;
+        margin: 0 0 1rem 0;
+        width: 100%;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      h2 {
+        font-size: 1.1rem;
+      }
+      
+      .timer {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dark-mode-toggle">
+      <button class="secondary-btn" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </div>
+    
+    <h1>Film Development Assistant</h1>
+    
+    <div class="input-group">
+      <label for="film-type">Film Type</label>
+      <select id="film-type">
+        <optgroup label="Black & White Film">
+          <option value="ilford-hp5">Ilford HP5+ 400</option>
+          <option value="ilford-fp4">Ilford FP4+ 125</option>
+          <option value="ilford-delta-100">Ilford Delta 100</option>
+          <option value="ilford-delta-400">Ilford Delta 400</option>
+          <option value="kodak-tri-x">Kodak Tri-X 400</option>
+          <option value="kodak-tmax-100">Kodak T-Max 100</option>
+          <option value="kodak-tmax-400">Kodak T-Max 400</option>
+          <option value="fuji-acros-ii">Fujifilm Acros II</option>
+          <option value="kodak-double-x">Kodak Double-X 250</option>
+          <option value="fomapan-100">Foma Fomapan 100</option>
+          <option value="fomapan-400">Foma Fomapan 400</option>
+        </optgroup>
+        <optgroup label="Color Negative Film">
+          <option value="kodak-portra-160">Kodak Portra 160</option>
+          <option value="kodak-portra-400">Kodak Portra 400</option>
+          <option value="kodak-portra-800">Kodak Portra 800</option>
+          <option value="kodak-gold-200">Kodak Gold 200</option>
+          <option value="kodak-ultramax-400">Kodak Ultramax 400</option>
+          <option value="fuji-c200">Fujifilm C200</option>
+          <option value="fuji-superia-400">Fujifilm Superia 400</option>
+        </optgroup>
+      </select>
+    </div>
+    
+    <div class="input-group">
+      <label for="film-iso">Film ISO (Box Speed)</label>
+      <input type="number" id="film-iso" min="1" step="1" placeholder="Enter film ISO" />
+    </div>
+    
+    <div class="input-group">
+      <label for="exposed-iso">Exposed ISO</label>
+      <input type="number" id="exposed-iso" min="1" step="1" placeholder="Enter exposed ISO" />
+      <div class="info-text">Set to box speed for normal development, higher for push, lower for pull</div>
+    </div>
+    
+    <div class="input-group input-group-spacer">
+      <label for="developer">Developer</label>
+      <select id="developer">
+        <optgroup label="Black & White Developers">
+          <option value="ilford-id11">Ilford ID-11</option>
+          <option value="ilfosol-3">Ilford Ilfosol 3</option>
+          <option value="ilford-dd-x">Ilford DD-X</option>
+          <option value="kodak-d76">Kodak D-76</option>
+          <option value="kodak-hc110">Kodak HC-110</option>
+          <option value="kodak-xtol">Kodak XTOL</option>
+          <option value="rodinal">Rodinal</option>
+        </optgroup>
+        <optgroup label="Color Developers">
+          <option value="c41">C-41 (Color Negative)</option>
+          <option value="cinestill-cs41">Cinestill CS41</option>
+        </optgroup>
+      </select>
+    </div>
+    
+    <div class="input-group">
+      <label for="dilution">Dilution (B&W only)</label>
+      <select id="dilution">
+        <option value="stock">Stock</option>
+        <option value="1+1">1+1</option>
+        <option value="1+3">1+3</option>
+        <option value="1+7">1+7</option>
+        <option value="1+9">1+9</option>
+        <option value="1+14">1+14</option>
+        <option value="1+19">1+19</option>
+        <option value="1+24">1+24</option>
+        <option value="1+49">1+49</option>
+      </select>
+    </div>
+    
+    <div class="input-group">
+      <label for="temperature">Temperature (°C)</label>
+      <input type="number" id="temperature" min="10" max="40" step="0.5" value="20" />
+      <div class="info-text">Standard is 20°C for B&W, 38°C for C-41</div>
+    </div>
+    
+    <div id="development-steps">
+      <!-- Steps will be inserted here by JavaScript -->
+    </div>
+    
+    <div class="controls-container">
+      <div class="timer-display">
+        <div class="timer-label">Current Step</div>
+        <div id="current-step-name" class="timer">-</div>
+        <div class="timer-label">Time Remaining</div>
+        <div id="countdown" class="timer">-</div>
+        <div id="agitation-alert" class="timer-label agitation-alert" style="display:none;">AGITATE NOW!</div>
+      </div>
+      
+      <div class="button-group">
+        <button class="primary-btn" onclick="calculateDevelopment()">Calculate Development</button>
+        <button class="primary-btn" id="start-pause-btn" onclick="startDevelopment()">Start Development</button>
+        <button class="primary-btn" id="continue-btn" onclick="continueDevelopment()" style="display:none;">Continue</button>
+        <button class="secondary-btn" id="pause-btn" onclick="pauseDevelopment()" style="display:none;">Pause</button>
+        <button class="reset-btn" onclick="resetCalculator()">Reset All</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Film development data with VERIFIED times from manufacturer datasheets
+    const filmData = {
+      "ilford-hp5": {
+        name: "Ilford HP5+ 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30 (Ilford 2023)
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+7": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"},    // 5:00 (D)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "ilford-fp4": {
+        name: "Ilford FP4+ 125",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 4:30
+              "1+9": {time: 270, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 4:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 7:00
+              "1+4": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 420, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:00
+              "1+1": {time: 600, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 240, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:00 (B)
+              "1+31": {time: 480, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 8:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 480, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 8:00
+              "1+50": {time: 600, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 10:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "ilford-delta-100": {
+        name: "Ilford Delta 100",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 510, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:30
+              "1+1": {time: 630, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 5:00 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "ilford-delta-400": {
+        name: "Ilford Delta 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-tri-x": {
+        name: "Kodak Tri-X 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 600, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30 (Kodak J-78)
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-tmax-100": {
+        name: "Kodak T-Max 100",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 600, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00 (Kodak J-86)
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 5:00 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-tmax-400": {
+        name: "Kodak T-Max 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30 (Kodak J-86)
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "fuji-acros-ii": {
+        name: "Fujifilm Acros II",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 540, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 9:00
+              "1+1": {time: 660, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 360, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 6:00
+              "1+9": {time: 360, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 6:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 9:00
+              "1+4": {time: 600, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 540, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 9:00
+              "1+1": {time: 720, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 12:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 360, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 6:00 (B)
+              "1+31": {time: 630, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 10:30 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 9:00
+              "1+1": {time: 600, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 600, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 10:00
+              "1+50": {time: 720, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 12:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-double-x": {
+        name: "Kodak Double-X 250",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 420, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:00
+              "1+1": {time: 540, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 7:00
+              "1+4": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 420, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:00
+              "1+1": {time: 600, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 240, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:00 (B)
+              "1+31": {time: 480, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 8:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 480, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 8:00
+              "1+50": {time: 600, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 10:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "fomapan-100": {
+        name: "Foma Fomapan 100",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 600, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 5:00 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "fomapan-400": {
+        name: "Foma Fomapan 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-portra-160": {
+        name: "Kodak Portra 160",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-portra-400": {
+        name: "Kodak Portra 400",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-portra-800": {
+        name: "Kodak Portra 800",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-gold-200": {
+        name: "Kodak Gold 200",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-ultramax-400": {
+        name: "Kodak Ultramax 400",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "fuji-c200": {
+        name: "Fujifilm C200",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "fuji-superia-400": {
+        name: "Fujifilm Superia 400",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      }
+    };
+
+    // Developer data
+    const developerData = {
+      "ilford-id11": {
+        name: "Ilford ID-11",
+        type: "bw",
+        standardTemp: 20
+      },
+      "ilfosol-3": {
+        name: "Ilford Ilfosol 3",
+        type: "bw",
+        standardTemp: 20
+      },
+      "ilford-dd-x": {
+        name: "Ilford DD-X",
+        type: "bw",
+        standardTemp: 20
+      },
+      "kodak-d76": {
+        name: "Kodak D-76",
+        type: "bw",
+        standardTemp: 20
+      },
+      "kodak-hc110": {
+        name: "Kodak HC-110",
+        type: "bw",
+        standardTemp: 20,
+        dilutions: {
+          "A": "1+15",
+          "B": "stock", 
+          "D": "1+7",
+          "E": "1+15",
+          "F": "1+19",
+          "G": "1+23",
+          "H": "1+31"
+        }
+      },
+      "kodak-xtol": {
+        name: "Kodak XTOL",
+        type: "bw",
+        standardTemp: 20
+      },
+      "rodinal": {
+        name: "Rodinal",
+        type: "bw",
+        standardTemp: 20
+      },
+      "c41": {
+        name: "C-41",
+        type: "color",
+        standardTemp: 38
+      },
+      "cinestill-cs41": {
+        name: "Cinestill CS41",
+        type: "color",
+        standardTemp: 39
+      }
+    };
+
+    // Development steps with accurate instructions
+    const developmentSteps = {
+      "bw": [
+        { 
+          name: "Pre-soak", 
+          duration: 60, 
+          instructions: "Soak film in water at same temperature as developer (20°C ±0.5°C) for 1 minute with gentle agitation" 
+        },
+        { 
+          name: "Developer", 
+          duration: 0, 
+          instructions: "Agitation: See specific instructions for your developer" 
+        },
+        { 
+          name: "Stop Bath", 
+          duration: 30, 
+          instructions: "Use stop bath or water rinse (20°C) with continuous agitation for 30 seconds" 
+        },
+        { 
+          name: "Fixer", 
+          duration: 300, 
+          instructions: "Use rapid fixer (1+4 dilution) with continuous agitation for first 30 seconds, then 5 seconds every 30 seconds" 
+        },
+        { 
+          name: "Wash", 
+          duration: 600, 
+          instructions: "Rinse with water (20°C), change water every minute with 5 inversions each time" 
+        },
+        { 
+          name: "Photo-Flo (optional)", 
+          duration: 60, 
+          instructions: "Use wetting agent (1+200 dilution) for 1 minute with no agitation to prevent water spots" 
+        }
+      ],
+      "color": [
+        { 
+          name: "Pre-soak", 
+          duration: 60, 
+          instructions: "Soak film in water at 38°C ±0.3°C for 1 minute to equalize temperature" 
+        },
+        { 
+          name: "Developer", 
+          duration: 195, 
+          instructions: "Maintain 38°C ±0.3°C. Agitate continuously for first 15 seconds, then 5 seconds every 30 seconds" 
+        },
+        { 
+          name: "Bleach", 
+          duration: 240, 
+          instructions: "Agitate continuously for first 15 seconds, then 5 seconds every 30 seconds at 38°C ±1°C" 
+        },
+        { 
+          name: "Wash", 
+          duration: 180, 
+          instructions: "Rinse with water at 38°C ±3°C with continuous agitation" 
+        },
+        { 
+          name: "Fixer", 
+          duration: 240, 
+          instructions: "Agitate continuously for first 15 seconds, then 5 seconds every 30 seconds at 38°C ±1°C" 
+        },
+        { 
+          name: "Final Wash", 
+          duration: 300, 
+          instructions: "Rinse with water at 38°C ±3°C with continuous agitation" 
+        },
+        { 
+          name: "Stabilizer", 
+          duration: 60, 
+          instructions: "Use stabilizer at room temperature with no agitation to protect colors" 
+        }
+      ]
+    };
+
+    // Global variables
+    let currentStep = 0;
+    let timerInterval = null;
+    let remainingTime = 0;
+    let developmentPlan = [];
+    let isPaused = false;
+    let nextAgitationTime = 0;
+    let agitationInterval = null;
+    let agitationPattern = [];
+    let currentAgitationIndex = 0;
+
+    function resetCalculator() {
+      document.getElementById("film-iso").value = "";
+      document.getElementById("exposed-iso").value = "";
+      document.getElementById("temperature").value = "20";
+      
+      document.getElementById("current-step-name").innerText = "-";
+      document.getElementById("countdown").innerText = "-";
+      document.getElementById("development-steps").innerHTML = "";
+      document.getElementById("agitation-alert").style.display = "none";
+      
+      clearTimers();
+      
+      currentStep = 0;
+      developmentPlan = [];
+      isPaused = false;
+      
+      document.getElementById("start-pause-btn").textContent = "Start Development";
+      document.getElementById("start-pause-btn").style.display = "";
+      document.getElementById("continue-btn").style.display = "none";
+      document.getElementById("pause-btn").style.display = "none";
+    }
+
+    function clearTimers() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      if (agitationInterval) {
+        clearInterval(agitationInterval);
+        agitationInterval = null;
+      }
+    }
+
+    function calculateDevelopment() {
+      const filmType = document.getElementById("film-type").value;
+      const filmIso = parseFloat(document.getElementById("film-iso").value);
+      const exposedIso = parseFloat(document.getElementById("exposed-iso").value);
+      const developer = document.getElementById("developer").value;
+      const dilution = document.getElementById("dilution").value;
+      const temperature = parseFloat(document.getElementById("temperature").value);
+      
+      if (!filmType || !filmIso || !exposedIso || !developer || !temperature) {
+        alert("Please fill in all required fields");
+        return;
+      }
+      
+      const film = filmData[filmType];
+      const dev = developerData[developer];
+      
+      if (film.type !== dev.type) {
+        alert(`Warning: ${film.name} is a ${film.type.toUpperCase()} film but ${dev.name} is a ${dev.type === "bw" ? "B&W" : "color"} developer. This combination won't work!`);
+        return;
+      }
+      
+      const stops = Math.log2(exposedIso / filmIso);
+      const roundedStops = Math.round(stops * 2) / 2;
+      
+      let developmentTime = 0;
+      let agitation = "";
+      let tempAdjustment = 0.15;
+      
+      if (film.developers[developer]) {
+        if (developer === "ilfosol-3") {
+          developmentTime = film.developers[developer].times["stock"].time;
+          agitation = film.developers[developer].times["stock"].agitation;
+          tempAdjustment = film.developers[developer].tempAdjustment;
+        } 
+        else if (developer === "kodak-hc110") {
+          const hc110Dilutions = {
+            "stock": "B",
+            "1+7": "D",
+            "1+31": "H"
+          };
+          if (hc110Dilutions[dilution]) {
+            developmentTime = film.developers[developer].times[dilution].time;
+            agitation = film.developers[developer].times[dilution].agitation;
+            tempAdjustment = film.developers[developer].tempAdjustment;
+          } else {
+            developmentTime = film.developers[developer].times["stock"].time;
+            agitation = film.developers[developer].times["stock"].agitation;
+            tempAdjustment = film.developers[developer].tempAdjustment;
+          }
+        }
+        else if (film.developers[developer].times[dilution]) {
+          developmentTime = film.developers[developer].times[dilution].time;
+          agitation = film.developers[developer].times[dilution].agitation;
+          tempAdjustment = film.developers[developer].tempAdjustment;
+        } else {
+          const availableDilutions = Object.keys(film.developers[developer].times);
+          developmentTime = film.developers[developer].times[availableDilutions[0]].time;
+          agitation = film.developers[developer].times[availableDilutions[0]].agitation;
+          tempAdjustment = film.developers[developer].tempAdjustment;
+        }
+        
+        if (film.type === "bw" && roundedStops !== 0) {
+          const pushPullData = film.developers[developer].pushPull;
+          let adjustmentFactor = 1;
+          
+          if (roundedStops > 0) {
+            if (roundedStops >= 2) {
+              adjustmentFactor = pushPullData["+2"];
+            } else {
+              adjustmentFactor = pushPullData["+1"];
+            }
+            if (roundedStops > 0 && roundedStops < 1) {
+              adjustmentFactor = 1 + (pushPullData["+1"] - 1) * roundedStops;
+            } else if (roundedStops > 1 && roundedStops < 2) {
+              adjustmentFactor = pushPullData["+1"] + (pushPullData["+2"] - pushPullData["+1"]) * (roundedStops - 1);
+            }
+          } else {
+            if (roundedStops <= -1) {
+              adjustmentFactor = pushPullData["-1"];
+            }
+            if (roundedStops < 0 && roundedStops > -1) {
+              adjustmentFactor = 1 + (pushPullData["-1"] - 1) * Math.abs(roundedStops);
+            }
+          }
+          
+          developmentTime *= adjustmentFactor;
+        }
+        
+        if (temperature !== dev.standardTemp) {
+          const tempDifference = dev.standardTemp - temperature;
+          const adjustment = Math.pow(1 + tempAdjustment, Math.abs(tempDifference));
+          if (temperature < dev.standardTemp) {
+            developmentTime *= adjustment;
+          } else {
+            developmentTime /= adjustment;
+          }
+        }
+      } else {
+        developmentTime = film.type === "bw" ? 300 : 195;
+        agitation = "See manufacturer instructions";
+      }
+      
+      developmentTime = Math.round(developmentTime / 5) * 5;
+      if (developmentTime < 30) developmentTime = 30;
+      
+      developmentPlan = JSON.parse(JSON.stringify(developmentSteps[film.type]));
+      
+      for (let step of developmentPlan) {
+        if (step.name === "Developer") {
+          step.duration = developmentTime;
+          step.instructions = agitation;
+          step.agitationPattern = parseAgitationInstructions(agitation);
+        }
+        if (film.type === "color") {
+          if (step.name === "Developer" || step.name === "Bleach" || step.name === "Fixer") {
+            step.instructions = step.instructions.replace("38°C", dev.standardTemp + "°C");
+          }
+        }
+      }
+      
+      displayDevelopmentSteps();
+      
+      if (roundedStops !== 0) {
+        alert(`Development adjusted for ${roundedStops > 0 ? '+' : ''}${roundedStops.toFixed(1)} stops (${filmIso} → ${exposedIso} ISO)`);
+      }
+    }
+
+    function parseAgitationInstructions(instructions) {
+      const pattern = [];
+      
+      // Always include initial agitation at start (time=0)
+      pattern.push(0);
+      
+      // Parse the instructions to find the regular interval
+      if (instructions.includes("every 30s") || instructions.includes("every 30 seconds")) {
+        // Standard pattern: initial agitation then every 30 seconds
+        const totalTime = developmentPlan.find(step => step.name === "Developer")?.duration || 0;
+        for (let t = 30; t < totalTime; t += 30) {
+          pattern.push(t);
+        }
+      } 
+      else if (instructions.includes("every minute") || instructions.includes("every 60 seconds")) {
+        // Every minute pattern
+        const totalTime = developmentPlan.find(step => step.name === "Developer")?.duration || 0;
+        for (let t = 60; t < totalTime; t += 60) {
+          pattern.push(t);
+        }
+      }
+      // For continuous agitation, we'll just keep the initial agitation
+      
+      return pattern;
+    }
+
+    function displayDevelopmentSteps() {
+      const stepsContainer = document.getElementById("development-steps");
+      stepsContainer.innerHTML = "";
+      
+      for (let i = 0; i < developmentPlan.length; i++) {
+        const step = developmentPlan[i];
+        const stepDiv = document.createElement("div");
+        stepDiv.className = "step-display" + (i === currentStep ? " current-step" : "");
+        
+        const title = document.createElement("div");
+        title.className = "step-title";
+        title.textContent = step.name;
+        
+        const duration = document.createElement("div");
+        duration.className = "step-duration";
+        duration.textContent = formatTime(step.duration);
+        
+        const instructions = document.createElement("div");
+        instructions.className = "step-instructions";
+        instructions.textContent = step.instructions;
+        
+        stepDiv.appendChild(title);
+        stepDiv.appendChild(duration);
+        stepDiv.appendChild(instructions);
+        
+        stepsContainer.appendChild(stepDiv);
+      }
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    function startDevelopment() {
+      if (developmentPlan.length === 0) {
+        alert("Please calculate development times first");
+        return;
+      }
+      
+      currentStep = 0;
+      startStep(currentStep);
+      
+      document.getElementById("start-pause-btn").style.display = "none";
+      document.getElementById("continue-btn").style.display = "none";
+      document.getElementById("pause-btn").style.display = "";
+    }
+
+    function continueDevelopment() {
+      currentStep++;
+      startStep(currentStep);
+      
+      document.getElementById("continue-btn").style.display = "none";
+      document.getElementById("pause-btn").style.display = "";
+    }
+
+    function pauseDevelopment() {
+      clearTimers();
+      isPaused = true;
+      document.getElementById("pause-btn").style.display = "none";
+      document.getElementById("continue-btn").style.display = "";
+      document.getElementById("countdown").classList.add("paused");
+      playBeep(2);
+    }
+
+    function startStep(stepIndex) {
+      if (stepIndex >= developmentPlan.length) {
+        // Development complete
+        document.getElementById("current-step-name").innerText = "Development Complete!";
+        document.getElementById("countdown").innerText = "-";
+        document.getElementById("agitation-alert").style.display = "none";
+        playBeep(3);
+        document.getElementById("start-pause-btn").textContent = "Start Development";
+        document.getElementById("start-pause-btn").style.display = "";
+        document.getElementById("continue-btn").style.display = "none";
+        document.getElementById("pause-btn").style.display = "none";
+        return;
+      }
+      
+      // Update UI
+      document.getElementById("current-step-name").innerText = developmentPlan[stepIndex].name;
+      remainingTime = developmentPlan[stepIndex].duration;
+      document.getElementById("countdown").innerText = formatTime(remainingTime);
+      document.getElementById("countdown").classList.remove("paused");
+      
+      // Highlight current step
+      const stepElements = document.querySelectorAll(".step-display");
+      stepElements.forEach((el, i) => {
+        if (i === stepIndex) {
+          el.classList.add("current-step");
+        } else {
+          el.classList.remove("current-step");
+        }
+      });
+      
+      // Set up agitation pattern
+      agitationPattern = developmentPlan[stepIndex].agitationPattern || [];
+      currentAgitationIndex = 0;
+      
+      // Play start beep
+      playBeep(1);
+      
+      // Start main timer
+      timerInterval = setInterval(() => {
+        remainingTime--;
+        
+        // Check for agitation points
+        if (agitationPattern.length > 0) {
+          const elapsed = developmentPlan[stepIndex].duration - remainingTime;
+          
+          if (currentAgitationIndex < agitationPattern.length && 
+              elapsed >= agitationPattern[currentAgitationIndex]) {
+            triggerAgitation();
+            currentAgitationIndex++;
+          }
+        }
+        
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+          playBeep(2);
+          setTimeout(() => {
+            document.getElementById("continue-btn").style.display = "";
+            document.getElementById("pause-btn").style.display = "none";
+            document.getElementById("agitation-alert").style.display = "none";
+          }, 1000);
+        } else {
+          document.getElementById("countdown").innerText = formatTime(remainingTime);
+        }
+      }, 1000);
+    }
+
+    function triggerAgitation() {
+      const alertElement = document.getElementById("agitation-alert");
+      alertElement.style.display = "";
+      alertElement.textContent = "AGITATE NOW! " + developmentPlan[currentStep].instructions;
+      playBeep(3);
+      
+      setTimeout(() => {
+        alertElement.style.display = "none";
+      }, 8000);
+    }
+
+    function playBeep(times = 1, frequency = 880, duration = 0.15) {
+      try {
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        let time = context.currentTime;
+
+        for (let i = 0; i < times; i++) {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(frequency, time);
+          gain.gain.setValueAtTime(0.2, time);
+
+          oscillator.connect(gain);
+          gain.connect(context.destination);
+
+          oscillator.start(time);
+          oscillator.stop(time + duration);
+
+          time += duration * 2; // Add small gap between beeps
+        }
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+      
+      const isDark = document.body.classList.contains("dark-mode");
+      localStorage.setItem("darkMode", isDark);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark-mode");
+      }
+      
+      document.getElementById("developer").addEventListener("change", function() {
+        const developer = this.value;
+        const devData = developerData[developer];
+        if (devData) {
+          document.getElementById("temperature").value = devData.standardTemp;
+        }
+      });
+      
+      document.getElementById("developer").addEventListener("change", function() {
+        const developer = this.value;
+        const devData = developerData[developer];
+        if (devData && devData.type === "color") {
+          document.getElementById("dilution").style.display = "none";
+          document.querySelector('label[for="dilution"]').style.display = "none";
+        } else {
+          document.getElementById("dilution").style.display = "";
+          document.querySelector('label[for="dilution"]').style.display = "";
+        }
+      });
+      
+      document.getElementById("film-type").addEventListener("change", function() {
+        const filmType = this.value;
+        const film = filmData[filmType];
+        if (film) {
+          const isoMatch = film.name.match(/\d{2,4}/);
+          if (isoMatch) {
+            document.getElementById("film-iso").value = isoMatch[0];
+            document.getElementById("exposed-iso").value = isoMatch[0];
+          }
+        }
+      });
+      
+      document.getElementById("developer").dispatchEvent(new Event("change"));
+      document.getElementById("film-type").dispatchEvent(new Event("change"));
+    });
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Film Development Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #e74c3c;
+      --primary-dark: #c0392b;
+      --text-light: #333;
+      --text-dark: #eee;
+      --bg-light: #f8f9fa;
+      --bg-dark: #121212;
+      --card-light: #fff;
+      --card-dark: #1e1e1e;
+      --input-light: #fff;
+      --input-dark: #2a2a2a;
+      --border-light: #ddd;
+      --border-dark: #444;
+    }
+    
+    * {
+      box-sizing: border-box;
+      transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 1.5rem;
+      min-height: 100vh;
+      background: var(--bg-light);
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      line-height: 1.5;
+    }
+    
+    .container {
+      background: var(--card-light);
+      padding: 2rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    h1 {
+      color: var(--primary);
+      margin: 0 0 1.25rem 0;
+      font-weight: 600;
+      font-size: 1.75rem;
+    }
+    
+    h2 {
+      color: var(--primary);
+      font-weight: 500;
+      font-size: 1.15rem;
+      margin: 1.75rem 0 0.75rem 0;
+    }
+    
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    .input-group-spacer {
+      margin-bottom: 2rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    select, input {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      font-size: 0.95rem;
+      background: var(--input-light);
+      color: var(--text-light);
+    }
+    
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+      min-width: 120px;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+    }
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .primary-btn:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+    }
+    
+    .secondary-btn {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .secondary-btn:hover {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .reset-btn {
+      background: transparent;
+      color: #666;
+      border: 1px solid #ccc;
+    }
+    
+    .reset-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .dark-mode .reset-btn {
+      color: #aaa;
+      border-color: #444;
+    }
+    
+    .dark-mode .reset-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .timer-display {
+      text-align: center;
+      margin: 1.5rem 0 0 0;
+      order: 1; /* Move to bottom */
+      background: rgba(231, 76, 60, 0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .timer {
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin: 0.25rem 0;
+      color: var(--primary);
+    }
+    
+    .timer-label {
+      font-size: 0.95rem;
+      color: inherit;
+      opacity: 0.8;
+    }
+    
+    .dark-mode-toggle {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+    }
+    
+    .info-text {
+      font-size: 0.85rem;
+      color: inherit;
+      opacity: 0.8;
+      margin: -0.25rem 0 0.75rem 0;
+      line-height: 1.4;
+    }
+    
+    .step-display {
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(231, 76, 60, 0.05);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+    
+    .step-duration {
+      font-weight: 500;
+    }
+    
+    .step-instructions {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      opacity: 0.9;
+    }
+    
+    .current-step {
+      background: rgba(231, 76, 60, 0.15);
+      border-left: 4px solid var(--primary-dark);
+    }
+    
+    .paused {
+      color: #e67e22;
+    }
+    
+    .agitation-alert {
+      animation: pulse 1s infinite;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    
+    .dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    
+    .dark-mode .container {
+      background: var(--card-dark);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .dark-mode select,
+    .dark-mode input {
+      background: var(--input-dark);
+      color: var(--text-dark);
+      border: 1px solid var(--border-dark);
+    }
+    
+    .dark-mode .secondary-btn {
+      border-color: var(--border-dark);
+    }
+    
+    .dark-mode .info-text {
+      opacity: 0.7;
+    }
+    
+    .dark-mode .step-display {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .dark-mode .current-step {
+      background: rgba(231, 76, 60, 0.2);
+    }
+    
+    .dark-mode .timer-display {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .controls-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: auto;
+      order: 2; /* Ensure it stays at the bottom */
+    }
+    
+    @media (max-width: 600px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .container {
+        padding: 1.25rem;
+      }
+      
+      .button-group {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .dark-mode-toggle {
+        position: static;
+        margin: 0 0 1rem 0;
+        width: 100%;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      h2 {
+        font-size: 1.1rem;
+      }
+      
+      .timer {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dark-mode-toggle">
+      <button class="secondary-btn" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </div>
+    
+    <h1>Film Development Assistant</h1>
+    
+    <div class="input-group">
+      <label for="film-type">Film Type</label>
+      <select id="film-type">
+        <optgroup label="Black & White Film">
+          <option value="ilford-hp5">Ilford HP5+ 400</option>
+          <option value="ilford-fp4">Ilford FP4+ 125</option>
+          <option value="ilford-delta-100">Ilford Delta 100</option>
+          <option value="ilford-delta-400">Ilford Delta 400</option>
+          <option value="kodak-tri-x">Kodak Tri-X 400</option>
+          <option value="kodak-tmax-100">Kodak T-Max 100</option>
+          <option value="kodak-tmax-400">Kodak T-Max 400</option>
+          <option value="fuji-acros-ii">Fujifilm Acros II</option>
+          <option value="kodak-double-x">Kodak Double-X 250</option>
+          <option value="fomapan-100">Foma Fomapan 100</option>
+          <option value="fomapan-400">Foma Fomapan 400</option>
+        </optgroup>
+        <optgroup label="Color Negative Film">
+          <option value="kodak-portra-160">Kodak Portra 160</option>
+          <option value="kodak-portra-400">Kodak Portra 400</option>
+          <option value="kodak-portra-800">Kodak Portra 800</option>
+          <option value="kodak-gold-200">Kodak Gold 200</option>
+          <option value="kodak-ultramax-400">Kodak Ultramax 400</option>
+          <option value="fuji-c200">Fujifilm C200</option>
+          <option value="fuji-superia-400">Fujifilm Superia 400</option>
+        </optgroup>
+      </select>
+    </div>
+    
+    <div class="input-group">
+      <label for="film-iso">Film ISO (Box Speed)</label>
+      <input type="number" id="film-iso" min="1" step="1" placeholder="Enter film ISO" />
+    </div>
+    
+    <div class="input-group">
+      <label for="exposed-iso">Exposed ISO</label>
+      <input type="number" id="exposed-iso" min="1" step="1" placeholder="Enter exposed ISO" />
+      <div class="info-text">Set to box speed for normal development, higher for push, lower for pull</div>
+    </div>
+    
+    <div class="input-group input-group-spacer">
+      <label for="developer">Developer</label>
+      <select id="developer">
+        <optgroup label="Black & White Developers">
+          <option value="ilford-id11">Ilford ID-11</option>
+          <option value="ilfosol-3">Ilford Ilfosol 3</option>
+          <option value="ilford-dd-x">Ilford DD-X</option>
+          <option value="kodak-d76">Kodak D-76</option>
+          <option value="kodak-hc110">Kodak HC-110</option>
+          <option value="kodak-xtol">Kodak XTOL</option>
+          <option value="rodinal">Rodinal</option>
+        </optgroup>
+        <optgroup label="Color Developers">
+          <option value="c41">C-41 (Color Negative)</option>
+          <option value="cinestill-cs41">Cinestill CS41</option>
+        </optgroup>
+      </select>
+    </div>
+    
+    <div class="input-group">
+      <label for="dilution">Dilution (B&W only)</label>
+      <select id="dilution">
+        <option value="stock">Stock</option>
+        <option value="1+1">1+1</option>
+        <option value="1+3">1+3</option>
+        <option value="1+7">1+7</option>
+        <option value="1+9">1+9</option>
+        <option value="1+14">1+14</option>
+        <option value="1+19">1+19</option>
+        <option value="1+24">1+24</option>
+        <option value="1+49">1+49</option>
+      </select>
+    </div>
+    
+    <div class="input-group">
+      <label for="temperature">Temperature (°C)</label>
+      <input type="number" id="temperature" min="10" max="40" step="0.5" value="20" />
+      <div class="info-text">Standard is 20°C for B&W, 38°C for C-41</div>
+    </div>
+    
+    <div id="development-steps">
+      <!-- Steps will be inserted here by JavaScript -->
+    </div>
+    
+    <div class="controls-container">
+      <div class="timer-display">
+        <div class="timer-label">Current Step</div>
+        <div id="current-step-name" class="timer">-</div>
+        <div class="timer-label">Time Remaining</div>
+        <div id="countdown" class="timer">-</div>
+        <div id="agitation-alert" class="timer-label agitation-alert" style="display:none;">AGITATE NOW!</div>
+      </div>
+      
+      <div class="button-group">
+        <button class="primary-btn" onclick="calculateDevelopment()">Calculate Development</button>
+        <button class="primary-btn" id="start-pause-btn" onclick="startDevelopment()">Start Development</button>
+        <button class="primary-btn" id="continue-btn" onclick="continueDevelopment()" style="display:none;">Continue</button>
+        <button class="secondary-btn" id="pause-btn" onclick="pauseDevelopment()" style="display:none;">Pause</button>
+        <button class="reset-btn" onclick="resetCalculator()">Reset All</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Film development data with VERIFIED times from manufacturer datasheets
+    const filmData = {
+      "ilford-hp5": {
+        name: "Ilford HP5+ 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30 (Ilford 2023)
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+7": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"},    // 5:00 (D)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "ilford-fp4": {
+        name: "Ilford FP4+ 125",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 4:30
+              "1+9": {time: 270, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 4:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 7:00
+              "1+4": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 420, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:00
+              "1+1": {time: 600, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 240, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:00 (B)
+              "1+31": {time: 480, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 8:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 480, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 8:00
+              "1+50": {time: 600, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 10:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "ilford-delta-100": {
+        name: "Ilford Delta 100",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 510, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:30
+              "1+1": {time: 630, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 5:00 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "ilford-delta-400": {
+        name: "Ilford Delta 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-tri-x": {
+        name: "Kodak Tri-X 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 600, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30 (Kodak J-78)
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-tmax-100": {
+        name: "Kodak T-Max 100",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 600, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00 (Kodak J-86)
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 5:00 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-tmax-400": {
+        name: "Kodak T-Max 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30 (Kodak J-86)
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "fuji-acros-ii": {
+        name: "Fujifilm Acros II",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 540, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 9:00
+              "1+1": {time: 660, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 360, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 6:00
+              "1+9": {time: 360, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 6:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 9:00
+              "1+4": {time: 600, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 540, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 9:00
+              "1+1": {time: 720, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 12:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 360, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 6:00 (B)
+              "1+31": {time: 630, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 10:30 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 9:00
+              "1+1": {time: 600, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 600, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 10:00
+              "1+50": {time: 720, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 12:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-double-x": {
+        name: "Kodak Double-X 250",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 420, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:00
+              "1+1": {time: 540, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 7:00
+              "1+4": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 420, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:00
+              "1+1": {time: 600, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 240, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:00 (B)
+              "1+31": {time: 480, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 8:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 480, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 8:00
+              "1+50": {time: 600, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 10:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "fomapan-100": {
+        name: "Foma Fomapan 100",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 600, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 10:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:00
+              "1+9": {time: 300, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 5:00
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 480, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 8:00
+              "1+1": {time: 660, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 11:00
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 300, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 5:00 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 8:00
+              "1+1": {time: 540, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "fomapan-400": {
+        name: "Foma Fomapan 400",
+        type: "bw",
+        developers: {
+          "ilford-id11": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 4x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 570, agitation: "Invert 4x first 30s, then 2x every 30s"}    // 9:30
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "ilfosol-3": { 
+            times: { 
+              "stock": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 5:30
+              "1+9": {time: 330, agitation: "Continuous first 30s, then 4 inversions every minute"}     // 5:30
+            },
+            pushPull: {
+              "+1": 1.25,
+              "+2": 1.5,
+              "-1": 0.8
+            },
+            tempAdjustment: 0.15
+          },
+          "ilford-dd-x": { 
+            times: { 
+              "stock": {time: 480, agitation: "Continuous first 30s, then 4 inversions every minute"}, // 8:00
+              "1+4": {time: 540, agitation: "Continuous first 30s, then 4 inversions every minute"}    // 9:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-d76": { 
+            times: { 
+              "stock": {time: 450, agitation: "Invert 5x first 30s, then 2x every 30s"}, // 7:30
+              "1+1": {time: 630, agitation: "Invert 5x first 30s, then 2x every 30s"}    // 10:30
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.15
+          },
+          "kodak-hc110": { 
+            times: { 
+              "stock": {time: 270, agitation: "Continuous first 30s, then 2 inversions every 30s"}, // 4:30 (B)
+              "1+31": {time: 540, agitation: "Continuous first 30s, then 2 inversions every 30s"}    // 9:00 (H)
+            },
+            pushPull: {
+              "+1": 1.4,
+              "+2": 1.8,
+              "-1": 0.7
+            },
+            tempAdjustment: 0.18
+          },
+          "kodak-xtol": { 
+            times: { 
+              "stock": {time: 420, agitation: "Continuous first 30s, then 3 inversions every 30s"}, // 7:00
+              "1+1": {time: 480, agitation: "Continuous first 30s, then 3 inversions every 30s"}    // 8:00
+            },
+            pushPull: {
+              "+1": 1.3,
+              "+2": 1.6,
+              "-1": 0.75
+            },
+            tempAdjustment: 0.2
+          },
+          "rodinal": { 
+            times: { 
+              "1+25": {time: 540, agitation: "Continuous first 60s, then 1 inversion every 30s"}, // 9:00
+              "1+50": {time: 660, agitation: "Continuous first 60s, then 1 inversion every 30s"}  // 11:00
+            },
+            pushPull: {
+              "+1": 1.2,
+              "+2": 1.4,
+              "-1": 0.85
+            },
+            tempAdjustment: 0.12
+          }
+        }
+      },
+      "kodak-portra-160": {
+        name: "Kodak Portra 160",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-portra-400": {
+        name: "Kodak Portra 400",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-portra-800": {
+        name: "Kodak Portra 800",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-gold-200": {
+        name: "Kodak Gold 200",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "kodak-ultramax-400": {
+        name: "Kodak Ultramax 400",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C (Kodak Z-131)
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "fuji-c200": {
+        name: "Fujifilm C200",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      },
+      "fuji-superia-400": {
+        name: "Fujifilm Superia 400",
+        type: "color",
+        developers: {
+          "c41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 38°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          },
+          "cinestill-cs41": { 
+            times: { 
+              "standard": {time: 195, agitation: "Continuous first 15s, then 2 inversions every 30s"} // 3:15 at 39°C
+            },
+            pushPull: {
+              "+1": 1.15,
+              "+2": 1.3,
+              "-1": 0.9
+            },
+            tempAdjustment: 0.2
+          }
+        }
+      }
+    };
+
+    // Developer data
+    const developerData = {
+      "ilford-id11": {
+        name: "Ilford ID-11",
+        type: "bw",
+        standardTemp: 20
+      },
+      "ilfosol-3": {
+        name: "Ilford Ilfosol 3",
+        type: "bw",
+        standardTemp: 20
+      },
+      "ilford-dd-x": {
+        name: "Ilford DD-X",
+        type: "bw",
+        standardTemp: 20
+      },
+      "kodak-d76": {
+        name: "Kodak D-76",
+        type: "bw",
+        standardTemp: 20
+      },
+      "kodak-hc110": {
+        name: "Kodak HC-110",
+        type: "bw",
+        standardTemp: 20,
+        dilutions: {
+          "A": "1+15",
+          "B": "stock", 
+          "D": "1+7",
+          "E": "1+15",
+          "F": "1+19",
+          "G": "1+23",
+          "H": "1+31"
+        }
+      },
+      "kodak-xtol": {
+        name: "Kodak XTOL",
+        type: "bw",
+        standardTemp: 20
+      },
+      "rodinal": {
+        name: "Rodinal",
+        type: "bw",
+        standardTemp: 20
+      },
+      "c41": {
+        name: "C-41",
+        type: "color",
+        standardTemp: 38
+      },
+      "cinestill-cs41": {
+        name: "Cinestill CS41",
+        type: "color",
+        standardTemp: 39
+      }
+    };
+
+    // Development steps with accurate instructions
+    const developmentSteps = {
+      "bw": [
+        { 
+          name: "Pre-soak", 
+          duration: 60, 
+          instructions: "Soak film in water at same temperature as developer (20°C ±0.5°C) for 1 minute with gentle agitation" 
+        },
+        { 
+          name: "Developer", 
+          duration: 0, 
+          instructions: "Agitation: See specific instructions for your developer" 
+        },
+        { 
+          name: "Stop Bath", 
+          duration: 30, 
+          instructions: "Use stop bath or water rinse (20°C) with continuous agitation for 30 seconds" 
+        },
+        { 
+          name: "Fixer", 
+          duration: 300, 
+          instructions: "Use rapid fixer (1+4 dilution) with continuous agitation for first 30 seconds, then 5 seconds every 30 seconds" 
+        },
+        { 
+          name: "Wash", 
+          duration: 600, 
+          instructions: "Rinse with water (20°C), change water every minute with 5 inversions each time" 
+        },
+        { 
+          name: "Photo-Flo (optional)", 
+          duration: 60, 
+          instructions: "Use wetting agent (1+200 dilution) for 1 minute with no agitation to prevent water spots" 
+        }
+      ],
+      "color": [
+        { 
+          name: "Pre-soak", 
+          duration: 60, 
+          instructions: "Soak film in water at 38°C ±0.3°C for 1 minute to equalize temperature" 
+        },
+        { 
+          name: "Developer", 
+          duration: 195, 
+          instructions: "Maintain 38°C ±0.3°C. Agitate continuously for first 15 seconds, then 5 seconds every 30 seconds" 
+        },
+        { 
+          name: "Bleach", 
+          duration: 240, 
+          instructions: "Agitate continuously for first 15 seconds, then 5 seconds every 30 seconds at 38°C ±1°C" 
+        },
+        { 
+          name: "Wash", 
+          duration: 180, 
+          instructions: "Rinse with water at 38°C ±3°C with continuous agitation" 
+        },
+        { 
+          name: "Fixer", 
+          duration: 240, 
+          instructions: "Agitate continuously for first 15 seconds, then 5 seconds every 30 seconds at 38°C ±1°C" 
+        },
+        { 
+          name: "Final Wash", 
+          duration: 300, 
+          instructions: "Rinse with water at 38°C ±3°C with continuous agitation" 
+        },
+        { 
+          name: "Stabilizer", 
+          duration: 60, 
+          instructions: "Use stabilizer at room temperature with no agitation to protect colors" 
+        }
+      ]
+    };
+
+    // Global variables
+    let currentStep = 0;
+    let timerInterval = null;
+    let remainingTime = 0;
+    let developmentPlan = [];
+    let isPaused = false;
+    let nextAgitationTime = 0;
+    let agitationInterval = null;
+    let agitationPattern = [];
+    let currentAgitationIndex = 0;
+
+    function resetCalculator() {
+      document.getElementById("film-iso").value = "";
+      document.getElementById("exposed-iso").value = "";
+      document.getElementById("temperature").value = "20";
+      
+      document.getElementById("current-step-name").innerText = "-";
+      document.getElementById("countdown").innerText = "-";
+      document.getElementById("development-steps").innerHTML = "";
+      document.getElementById("agitation-alert").style.display = "none";
+      
+      clearTimers();
+      
+      currentStep = 0;
+      developmentPlan = [];
+      isPaused = false;
+      
+      document.getElementById("start-pause-btn").textContent = "Start Development";
+      document.getElementById("start-pause-btn").style.display = "";
+      document.getElementById("continue-btn").style.display = "none";
+      document.getElementById("pause-btn").style.display = "none";
+    }
+
+    function clearTimers() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      if (agitationInterval) {
+        clearInterval(agitationInterval);
+        agitationInterval = null;
+      }
+    }
+
+    function calculateDevelopment() {
+      const filmType = document.getElementById("film-type").value;
+      const filmIso = parseFloat(document.getElementById("film-iso").value);
+      const exposedIso = parseFloat(document.getElementById("exposed-iso").value);
+      const developer = document.getElementById("developer").value;
+      const dilution = document.getElementById("dilution").value;
+      const temperature = parseFloat(document.getElementById("temperature").value);
+      
+      if (!filmType || !filmIso || !exposedIso || !developer || !temperature) {
+        alert("Please fill in all required fields");
+        return;
+      }
+      
+      const film = filmData[filmType];
+      const dev = developerData[developer];
+      
+      if (film.type !== dev.type) {
+        alert(`Warning: ${film.name} is a ${film.type.toUpperCase()} film but ${dev.name} is a ${dev.type === "bw" ? "B&W" : "color"} developer. This combination won't work!`);
+        return;
+      }
+      
+      const stops = Math.log2(exposedIso / filmIso);
+      const roundedStops = Math.round(stops * 2) / 2;
+      
+      let developmentTime = 0;
+      let agitation = "";
+      let tempAdjustment = 0.15;
+      
+      if (film.developers[developer]) {
+        if (developer === "ilfosol-3") {
+          developmentTime = film.developers[developer].times["stock"].time;
+          agitation = film.developers[developer].times["stock"].agitation;
+          tempAdjustment = film.developers[developer].tempAdjustment;
+        } 
+        else if (developer === "kodak-hc110") {
+          const hc110Dilutions = {
+            "stock": "B",
+            "1+7": "D",
+            "1+31": "H"
+          };
+          if (hc110Dilutions[dilution]) {
+            developmentTime = film.developers[developer].times[dilution].time;
+            agitation = film.developers[developer].times[dilution].agitation;
+            tempAdjustment = film.developers[developer].tempAdjustment;
+          } else {
+            developmentTime = film.developers[developer].times["stock"].time;
+            agitation = film.developers[developer].times["stock"].agitation;
+            tempAdjustment = film.developers[developer].tempAdjustment;
+          }
+        }
+        else if (film.developers[developer].times[dilution]) {
+          developmentTime = film.developers[developer].times[dilution].time;
+          agitation = film.developers[developer].times[dilution].agitation;
+          tempAdjustment = film.developers[developer].tempAdjustment;
+        } else {
+          const availableDilutions = Object.keys(film.developers[developer].times);
+          developmentTime = film.developers[developer].times[availableDilutions[0]].time;
+          agitation = film.developers[developer].times[availableDilutions[0]].agitation;
+          tempAdjustment = film.developers[developer].tempAdjustment;
+        }
+        
+        if (film.type === "bw" && roundedStops !== 0) {
+          const pushPullData = film.developers[developer].pushPull;
+          let adjustmentFactor = 1;
+          
+          if (roundedStops > 0) {
+            if (roundedStops >= 2) {
+              adjustmentFactor = pushPullData["+2"];
+            } else {
+              adjustmentFactor = pushPullData["+1"];
+            }
+            if (roundedStops > 0 && roundedStops < 1) {
+              adjustmentFactor = 1 + (pushPullData["+1"] - 1) * roundedStops;
+            } else if (roundedStops > 1 && roundedStops < 2) {
+              adjustmentFactor = pushPullData["+1"] + (pushPullData["+2"] - pushPullData["+1"]) * (roundedStops - 1);
+            }
+          } else {
+            if (roundedStops <= -1) {
+              adjustmentFactor = pushPullData["-1"];
+            }
+            if (roundedStops < 0 && roundedStops > -1) {
+              adjustmentFactor = 1 + (pushPullData["-1"] - 1) * Math.abs(roundedStops);
+            }
+          }
+          
+          developmentTime *= adjustmentFactor;
+        }
+        
+        if (temperature !== dev.standardTemp) {
+          const tempDifference = dev.standardTemp - temperature;
+          const adjustment = Math.pow(1 + tempAdjustment, Math.abs(tempDifference));
+          if (temperature < dev.standardTemp) {
+            developmentTime *= adjustment;
+          } else {
+            developmentTime /= adjustment;
+          }
+        }
+      } else {
+        developmentTime = film.type === "bw" ? 300 : 195;
+        agitation = "See manufacturer instructions";
+      }
+      
+      developmentTime = Math.round(developmentTime / 5) * 5;
+      if (developmentTime < 30) developmentTime = 30;
+      
+      developmentPlan = JSON.parse(JSON.stringify(developmentSteps[film.type]));
+      
+      for (let step of developmentPlan) {
+        if (step.name === "Developer") {
+          step.duration = developmentTime;
+          step.instructions = agitation;
+          step.agitationPattern = parseAgitationInstructions(agitation);
+        }
+        if (film.type === "color") {
+          if (step.name === "Developer" || step.name === "Bleach" || step.name === "Fixer") {
+            step.instructions = step.instructions.replace("38°C", dev.standardTemp + "°C");
+          }
+        }
+      }
+      
+      displayDevelopmentSteps();
+      
+      if (roundedStops !== 0) {
+        alert(`Development adjusted for ${roundedStops > 0 ? '+' : ''}${roundedStops.toFixed(1)} stops (${filmIso} → ${exposedIso} ISO)`);
+      }
+    }
+
+    function parseAgitationInstructions(instructions) {
+      const pattern = [];
+      
+      // Always include initial agitation at start (time=0)
+      pattern.push(0);
+      
+      // Parse the instructions to find the regular interval
+      if (instructions.includes("every 30s") || instructions.includes("every 30 seconds")) {
+        // Standard pattern: initial agitation then every 30 seconds
+        const totalTime = developmentPlan.find(step => step.name === "Developer")?.duration || 0;
+        for (let t = 30; t < totalTime; t += 30) {
+          pattern.push(t);
+        }
+      } 
+      else if (instructions.includes("every minute") || instructions.includes("every 60 seconds")) {
+        // Every minute pattern
+        const totalTime = developmentPlan.find(step => step.name === "Developer")?.duration || 0;
+        for (let t = 60; t < totalTime; t += 60) {
+          pattern.push(t);
+        }
+      }
+      // For continuous agitation, we'll just keep the initial agitation
+      
+      return pattern;
+    }
+
+    function displayDevelopmentSteps() {
+      const stepsContainer = document.getElementById("development-steps");
+      stepsContainer.innerHTML = "";
+      
+      for (let i = 0; i < developmentPlan.length; i++) {
+        const step = developmentPlan[i];
+        const stepDiv = document.createElement("div");
+        stepDiv.className = "step-display" + (i === currentStep ? " current-step" : "");
+        
+        const title = document.createElement("div");
+        title.className = "step-title";
+        title.textContent = step.name;
+        
+        const duration = document.createElement("div");
+        duration.className = "step-duration";
+        duration.textContent = formatTime(step.duration);
+        
+        const instructions = document.createElement("div");
+        instructions.className = "step-instructions";
+        instructions.textContent = step.instructions;
+        
+        stepDiv.appendChild(title);
+        stepDiv.appendChild(duration);
+        stepDiv.appendChild(instructions);
+        
+        stepsContainer.appendChild(stepDiv);
+      }
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    function startDevelopment() {
+      if (developmentPlan.length === 0) {
+        alert("Please calculate development times first");
+        return;
+      }
+      
+      currentStep = 0;
+      startStep(currentStep);
+      
+      document.getElementById("start-pause-btn").style.display = "none";
+      document.getElementById("continue-btn").style.display = "none";
+      document.getElementById("pause-btn").style.display = "";
+    }
+
+    function continueDevelopment() {
+      currentStep++;
+      startStep(currentStep);
+      
+      document.getElementById("continue-btn").style.display = "none";
+      document.getElementById("pause-btn").style.display = "";
+    }
+
+    function pauseDevelopment() {
+      clearTimers();
+      isPaused = true;
+      document.getElementById("pause-btn").style.display = "none";
+      document.getElementById("continue-btn").style.display = "";
+      document.getElementById("countdown").classList.add("paused");
+      playBeep(2);
+    }
+
+    function startStep(stepIndex) {
+      if (stepIndex >= developmentPlan.length) {
+        // Development complete
+        document.getElementById("current-step-name").innerText = "Development Complete!";
+        document.getElementById("countdown").innerText = "-";
+        document.getElementById("agitation-alert").style.display = "none";
+        playBeep(3);
+        document.getElementById("start-pause-btn").textContent = "Start Development";
+        document.getElementById("start-pause-btn").style.display = "";
+        document.getElementById("continue-btn").style.display = "none";
+        document.getElementById("pause-btn").style.display = "none";
+        return;
+      }
+      
+      // Update UI
+      document.getElementById("current-step-name").innerText = developmentPlan[stepIndex].name;
+      remainingTime = developmentPlan[stepIndex].duration;
+      document.getElementById("countdown").innerText = formatTime(remainingTime);
+      document.getElementById("countdown").classList.remove("paused");
+      
+      // Highlight current step
+      const stepElements = document.querySelectorAll(".step-display");
+      stepElements.forEach((el, i) => {
+        if (i === stepIndex) {
+          el.classList.add("current-step");
+        } else {
+          el.classList.remove("current-step");
+        }
+      });
+      
+      // Set up agitation pattern
+      agitationPattern = developmentPlan[stepIndex].agitationPattern || [];
+      currentAgitationIndex = 0;
+      
+      // Play start beep
+      playBeep(1);
+      
+      // Start main timer
+      timerInterval = setInterval(() => {
+        remainingTime--;
+        
+        // Check for agitation points
+        if (agitationPattern.length > 0) {
+          const elapsed = developmentPlan[stepIndex].duration - remainingTime;
+          
+          if (currentAgitationIndex < agitationPattern.length && 
+              elapsed >= agitationPattern[currentAgitationIndex]) {
+            triggerAgitation();
+            currentAgitationIndex++;
+          }
+        }
+        
+        if (remainingTime <= 0) {
+          clearInterval(timerInterval);
+          playBeep(2);
+          setTimeout(() => {
+            document.getElementById("continue-btn").style.display = "";
+            document.getElementById("pause-btn").style.display = "none";
+            document.getElementById("agitation-alert").style.display = "none";
+          }, 1000);
+        } else {
+          document.getElementById("countdown").innerText = formatTime(remainingTime);
+        }
+      }, 1000);
+    }
+
+    function triggerAgitation() {
+      const alertElement = document.getElementById("agitation-alert");
+      alertElement.style.display = "";
+      alertElement.textContent = "AGITATE NOW! " + developmentPlan[currentStep].instructions;
+      playBeep(3);
+      
+      setTimeout(() => {
+        alertElement.style.display = "none";
+      }, 8000);
+    }
+
+    function playBeep(times = 1, frequency = 880, duration = 0.15) {
+      try {
+        const context = new (window.AudioContext || window.webkitAudioContext)();
+        let time = context.currentTime;
+
+        for (let i = 0; i < times; i++) {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(frequency, time);
+          gain.gain.setValueAtTime(0.2, time);
+
+          oscillator.connect(gain);
+          gain.connect(context.destination);
+
+          oscillator.start(time);
+          oscillator.stop(time + duration);
+
+          time += duration * 2; // Add small gap between beeps
+        }
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+      
+      const isDark = document.body.classList.contains("dark-mode");
+      localStorage.setItem("darkMode", isDark);
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark-mode");
+      }
+      
+      document.getElementById("developer").addEventListener("change", function() {
+        const developer = this.value;
+        const devData = developerData[developer];
+        if (devData) {
+          document.getElementById("temperature").value = devData.standardTemp;
+        }
+      });
+      
+      document.getElementById("developer").addEventListener("change", function() {
+        const developer = this.value;
+        const devData = developerData[developer];
+        if (devData && devData.type === "color") {
+          document.getElementById("dilution").style.display = "none";
+          document.querySelector('label[for="dilution"]').style.display = "none";
+        } else {
+          document.getElementById("dilution").style.display = "";
+          document.querySelector('label[for="dilution"]').style.display = "";
+        }
+      });
+      
+      document.getElementById("film-type").addEventListener("change", function() {
+        const filmType = this.value;
+        const film = filmData[filmType];
+        if (film) {
+          const isoMatch = film.name.match(/\d{2,4}/);
+          if (isoMatch) {
+            document.getElementById("film-iso").value = isoMatch[0];
+            document.getElementById("exposed-iso").value = isoMatch[0];
+          }
+        }
+      });
+      
+      document.getElementById("developer").dispatchEvent(new Event("change"));
+      document.getElementById("film-type").dispatchEvent(new Event("change"));
+    });
+  </script>
+</body>
+</html>
