@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Chemistry Dilution Calculator</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #c0392b;
+        }
+        
+        .result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .result h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Film Chemistry Dilution Calculator</h1>
+        
+        <div class="form-group">
+            <label for="chemical">Chemical Type</label>
+            <select id="chemical">
+                <option value="developer">Film Developer</option>
+                <option value="stopbath">Stop Bath</option>
+                <option value="fixer">Fixer</option>
+                <option value="blix">Blix (C-41)</option>
+                <option value="custom">Custom</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="stockStrength">Stock Solution Strength</label>
+            <input type="text" id="stockStrength" placeholder="e.g., 1+9, 1:3, etc.">
+        </div>
+        
+        <div class="form-group">
+            <label for="finalVolume">Final Volume Needed (ml)</label>
+            <input type="number" id="finalVolume" placeholder="e.g., 1000">
+        </div>
+        
+        <button onclick="calculateDilution()">Calculate</button>
+        
+        <div class="result" id="result" style="display: none;">
+            <h3>Mixing Instructions</h3>
+            <p id="instructions"></p>
+        </div>
+    </div>
+    
+    <script>
+        function calculateDilution() {
+            const chemical = document.getElementById('chemical').value;
+            const stockStrength = document.getElementById('stockStrength').value;
+            const finalVolume = parseFloat(document.getElementById('finalVolume').value);
+            
+            if (!stockStrength || !finalVolume || isNaN(finalVolume)) {
+                alert("Please fill in all fields correctly.");
+                return;
+            }
+            
+            // Parse dilution ratio (e.g., "1+9" → 1:9)
+            const parts = stockStrength.split(/[:+]/).map(part => parseFloat(part));
+            if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
+                alert("Invalid dilution format. Use '1+9' or '1:3'.");
+                return;
+            }
+            
+            const stockPart = parts[0];
+            const waterPart = parts[1];
+            const totalParts = stockPart + waterPart;
+            
+            // Calculate required stock and water
+            const stockNeeded = (stockPart / totalParts) * finalVolume;
+            const waterNeeded = finalVolume - stockNeeded;
+            
+            // Generate instructions
+            let instructions = `
+                <strong>For ${finalVolume}ml of working solution:</strong><br>
+                - Mix <strong>${stockNeeded.toFixed(1)}ml</strong> of stock ${chemical}<br>
+                - Add <strong>${waterNeeded.toFixed(1)}ml</strong> of water<br>
+                <em>Total: ${finalVolume}ml at ${stockStrength} dilution</em>
+            `;
+            
+            document.getElementById('instructions').innerHTML = instructions;
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
