@@ -222,6 +222,14 @@
       opacity: 0.7;
     }
     
+    /* Timer control styles */
+    .timer-controls {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    
     /* Responsive adjustments */
     @media (max-width: 600px) {
       body {
@@ -258,6 +266,10 @@
       
       .timer {
         font-size: 2rem;
+      }
+      
+      .timer-controls {
+        flex-direction: column;
       }
     }
   </style>
@@ -332,8 +344,8 @@
     </div>
     
     <div class="input-group">
-      <label for="base-time">Metered Exposure Time (seconds)</label>
-      <input type="number" id="base-time" min="0.1" step="0.1" placeholder="Enter exposure time" />
+      <label for="base-time">Metered Exposure Time (seconds or fraction like 1/60)</label>
+      <input type="text" id="base-time" placeholder="Enter exposure time (e.g., 1/60 or 30)" />
       <div class="info-text">For pinhole cameras without metering, estimate using Sunny 16 or calculate below</div>
     </div>
     
@@ -376,6 +388,12 @@
     <div class="timer-display">
       <div class="timer-label">Countdown</div>
       <div id="countdown" class="timer">-</div>
+    </div>
+    
+    <div class="timer-controls">
+      <button class="secondary-btn" id="pause-btn" onclick="pauseTimer()" disabled>Pause</button>
+      <button class="secondary-btn" id="resume-btn" onclick="resumeTimer()" disabled>Resume</button>
+      <button class="reset-btn" onclick="resetTimer()">Reset Timer</button>
     </div>
     
     <canvas id="graph"></canvas>
@@ -445,7 +463,31 @@
 
     let correctedTime = 0;
     let timerInterval = null;
+    let remainingTime = 0;
+    let isPaused = false;
     let chart = null;
+
+    // Parse time input - supports fractions (1/60) and decimal seconds
+    function parseTimeInput(timeStr) {
+      if (!timeStr) return null;
+      
+      // Check if input is a fraction
+      if (timeStr.includes('/')) {
+        const parts = timeStr.split('/');
+        if (parts.length === 2) {
+          const numerator = parseFloat(parts[0]);
+          const denominator = parseFloat(parts[1]);
+          if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+            return numerator / denominator;
+          }
+        }
+        return null; // Invalid fraction
+      }
+      
+      // Check if input is a decimal number
+      const time = parseFloat(timeStr);
+      return isNaN(time) ? null : time;
+    }
 
     function resetCalculator() {
       // Reset form inputs
@@ -458,11 +500,19 @@
       document.getElementById("result").innerText = "-";
       document.getElementById("countdown").innerText = "-";
       
+      // Reset timer controls
+      document.getElementById("pause-btn").disabled = true;
+      document.getElementById("resume-btn").disabled = true;
+      
       // Clear any running timer
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
       }
+      
+      // Reset timer state
+      isPaused = false;
+      remainingTime = 0;
       
       // Reset graph
       if (chart) {
@@ -470,6 +520,25 @@
         chart.data.datasets[1].data = [];
         chart.update();
       }
+    }
+
+    function resetTimer() {
+      // Clear any running timer
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      
+      // Reset countdown display
+      document.getElementById("countdown").innerText = "-";
+      
+      // Reset timer controls
+      document.getElementById("pause-btn").disabled = true;
+      document.getElementById("resume-btn").disabled = true;
+      
+      // Reset timer state
+      isPaused = false;
+      remainingTime = 0;
     }
 
     function calculatePinholeExposure() {
@@ -498,30 +567,65 @@
       // Calculate actual exposure time
       const exposureTime = baseExposure * Math.pow(fNumber / 16, 2);
       
+      // Format the time appropriately
+      let formattedTime;
+      if (exposureTime < 1) {
+        // Convert to fraction for short exposures
+        const fraction = simplifyFraction(1, 1/exposureTime);
+        formattedTime = fraction.numerator === 1 ? 
+          `1/${fraction.denominator}` : 
+          `${fraction.numerator}/${fraction.denominator}`;
+      } else {
+        formattedTime = exposureTime.toFixed(1);
+      }
+      
       // Set the calculated time in the base time field
-      document.getElementById("base-time").value = exposureTime.toFixed(1);
+      document.getElementById("base-time").value = formattedTime;
       
       // Auto-calculate the reciprocity
       calculateExposure();
     }
 
+    // Helper function to simplify fractions
+    function simplifyFraction(numerator, denominator) {
+      const gcd = (a, b) => b ? gcd(b, a % b) : a;
+      const divisor = gcd(numerator, denominator);
+      return {
+        numerator: numerator / divisor,
+        denominator: denominator / divisor
+      };
+    }
+
     function calculateExposure() {
       const material = document.getElementById("material").value;
-      const baseTime = parseFloat(document.getElementById("base-time").value);
+      const baseTimeInput = document.getElementById("base-time").value;
       
-      if (!baseTime || baseTime <= 0) {
-        document.getElementById("result").innerText = "Invalid";
+      // Parse the input time (supports fractions and decimals)
+      const baseTime = parseTimeInput(baseTimeInput);
+      
+      if (baseTime === null || baseTime <= 0) {
+        document.getElementById("result").innerText = "Invalid time format";
         return;
       }
       
       correctedTime = materialData[material](baseTime);
-      document.getElementById("result").innerText = `${correctedTime.toFixed(1)}s`;
+      
+      // Format the result appropriately
+      let formattedResult;
+      if (correctedTime < 1) {
+        // Convert to fraction for short exposures
+        const fraction = simplifyFraction(1, 1/correctedTime);
+        formattedResult = fraction.numerator === 1 ? 
+          `1/${Math.round(fraction.denominator)}s` : 
+          `${fraction.numerator}/${Math.round(fraction.denominator)}s`;
+      } else {
+        formattedResult = `${correctedTime.toFixed(1)}s`;
+      }
+      
+      document.getElementById("result").innerText = formattedResult;
       
       // Clear any existing timer
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        document.getElementById("countdown").innerText = "-";
-      }
+      resetTimer();
       
       // Update the graph
       updateGraph(material, baseTime);
@@ -658,19 +762,56 @@
       }
       
       playBeep(1);
-      let remaining = correctedTime;
-      document.getElementById("countdown").innerText = `${remaining.toFixed(1)}s`;
+      remainingTime = correctedTime;
+      
+      // Format the initial display
+      updateCountdownDisplay();
+      
+      // Enable pause button
+      document.getElementById("pause-btn").disabled = false;
+      document.getElementById("resume-btn").disabled = true;
+      
+      isPaused = false;
       
       timerInterval = setInterval(() => {
-        remaining -= 0.1;
-        if (remaining <= 0) {
-          clearInterval(timerInterval);
-          document.getElementById("countdown").innerText = "Done!";
-          playBeep(2);
-        } else {
-          document.getElementById("countdown").innerText = `${remaining.toFixed(1)}s`;
+        if (!isPaused) {
+          remainingTime -= 0.1;
+          if (remainingTime <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById("countdown").innerText = "Done!";
+            document.getElementById("pause-btn").disabled = true;
+            document.getElementById("resume-btn").disabled = true;
+            playBeep(2);
+          } else {
+            updateCountdownDisplay();
+          }
         }
       }, 100);
+    }
+
+    function updateCountdownDisplay() {
+      // Format the countdown display appropriately
+      if (remainingTime < 1) {
+        // Show as fraction for short times
+        const fraction = simplifyFraction(1, 1/remainingTime);
+        document.getElementById("countdown").innerText = fraction.numerator === 1 ? 
+          `1/${Math.round(fraction.denominator)}s` : 
+          `${fraction.numerator}/${Math.round(fraction.denominator)}s`;
+      } else {
+        document.getElementById("countdown").innerText = `${remainingTime.toFixed(1)}s`;
+      }
+    }
+
+    function pauseTimer() {
+      isPaused = true;
+      document.getElementById("pause-btn").disabled = true;
+      document.getElementById("resume-btn").disabled = false;
+    }
+
+    function resumeTimer() {
+      isPaused = false;
+      document.getElementById("pause-btn").disabled = false;
+      document.getElementById("resume-btn").disabled = true;
     }
 
     function playBeep(times = 1) {
@@ -705,8 +846,11 @@
       // Update chart colors if it exists
       if (chart) {
         const material = document.getElementById("material").value;
-        const baseTime = parseFloat(document.getElementById("base-time").value);
-        updateGraph(material, baseTime);
+        const baseTimeInput = document.getElementById("base-time").value;
+        const baseTime = parseTimeInput(baseTimeInput);
+        if (baseTime !== null) {
+          updateGraph(material, baseTime);
+        }
       }
     }
     
