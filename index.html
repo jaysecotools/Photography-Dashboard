@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Film Photography Tools</title>
+    <meta name="description" content="Photography Dashboard: free tools for analogue photographers including reciprocity, Sunny 16, film developer timer, dilution, film speed converter, and filter factor calculators.">
+
     <style>
         :root {
             --primary: #2c3e50;
             --secondary: #34495e;
             --accent: #e74c3c;
+            --accent-hover: #a93226; /* darker for better contrast */
             --light: #ecf0f1;
             --dark: #2c3e50;
         }
@@ -60,6 +63,7 @@
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             transition: transform 0.3s ease;
+            cursor: pointer;
         }
         
         .tool-card:hover {
@@ -77,9 +81,10 @@
             padding: 1.5rem;
         }
         
-        .tool-content h3 {
+        .tool-content h2 {
             margin-top: 0;
             color: var(--primary);
+            font-size: 1.3rem;
         }
         
         .btn {
@@ -94,7 +99,7 @@
         }
         
         .btn:hover {
-            background-color: #c0392b;
+            background-color: var(--accent-hover);
         }
         
         footer {
@@ -105,7 +110,13 @@
             margin-top: 2rem;
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
+            .tools-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
             .tools-grid {
                 grid-template-columns: 1fr;
             }
@@ -124,9 +135,9 @@
         <div class="tools-grid">
             <!-- Reciprocity Calculator -->
             <div class="tool-card">
-                <img src="https://images.unsplash.com/photo-1701008634298-76183582958d?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Reciprocity Failure">
+                <img src="https://images.unsplash.com/photo-1701008634298-76183582958d?w=600&auto=format" alt="Film camera on tripod for long exposure" loading="lazy">
                 <div class="tool-content">
-                    <h3>Reciprocity Calculator</h3>
+                    <h2>Reciprocity Calculator</h2>
                     <p>Calculate adjusted exposure times to compensate for reciprocity failure in long exposures with film.</p>
                     <a href="reciprocity.html" class="btn">Use Tool</a>
                 </div>
@@ -134,29 +145,29 @@
             
             <!-- Sunny 16 Calculator -->
             <div class="tool-card">
-                <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Sunny 16 Rule">
+                <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&auto=format" alt="Sunny outdoor scene representing the Sunny 16 rule" loading="lazy">
                 <div class="tool-content">
-                    <h3>Sunny 16 Calculator</h3>
+                    <h2>Sunny 16 Calculator</h2>
                     <p>Determine proper exposure settings without a light meter using the classic Sunny 16 rule.</p>
                     <a href="sunny16.html" class="btn">Use Tool</a>
                 </div>
             </div>
 
-                        <!-- Dilution Rate Calculator -->
+            <!-- Dilution Rate Calculator -->
             <div class="tool-card">
-                <img src="https://images.unsplash.com/photo-1709666414169-654f60926304?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dy1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Film Development">
+                <img src="https://images.unsplash.com/photo-1709666414169-654f60926304?w=600&auto=format" alt="Film developer solution being mixed" loading="lazy">
                 <div class="tool-content">
-                    <h3>Dilution Rate Calculator</h3>
+                    <h2>Dilution Rate Calculator</h2>
                     <p>Calculate quantities of developing chemicals based on required ratios.</p>
                     <a href="dilution.html" class="btn">Use Tool</a>
                 </div>
             </div>
-            
-            <!-- Film Developer Calculator/Timer -->
+
+            <!-- Film Developer Timer -->
             <div class="tool-card">
-                <img src="https://images.unsplash.com/photo-1646323354440-e2a01f7a3e94?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Film Development">
+                <img src="https://images.unsplash.com/photo-1646323354440-e2a01f7a3e94?w=600&auto=format" alt="Black and white film developing in a tank" loading="lazy">
                 <div class="tool-content">
-                    <h3>Film Developer Timer</h3>
+                    <h2>Film Developer Timer</h2>
                     <p>Calculate development times with temperature compensation and get precise timers for your film processing.</p>
                     <a href="developing.html" class="btn">Use Tool</a>
                 </div>
@@ -164,9 +175,9 @@
 
             <!-- Film Speed Converter -->
             <div class="tool-card">
-                <img src="https://images.unsplash.com/photo-1692126275559-663e5d747ba7?q=80&w=1159&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Film Development">
+                <img src="https://images.unsplash.com/photo-1692126275559-663e5d747ba7?w=600&auto=format" alt="35mm film rolls showing ISO ratings" loading="lazy">
                 <div class="tool-content">
-                    <h3>Film Speed Converter</h3>
+                    <h2>Film Speed Converter</h2>
                     <p>Convert between box ISO and shooting ISO; see push/pull stops and adjusted shutter speed.</p>
                     <a href="filmspeed.html" class="btn">Use Tool</a>
                 </div>
@@ -174,9 +185,9 @@
 
             <!-- Filter Factor Calculator -->
             <div class="tool-card">
-                <img src="https://images.unsplash.com/photo-1545424273-4dd93a233016?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Film Development">
+                <img src="https://images.unsplash.com/photo-1545424273-4dd93a233016?w=600&auto=format" alt="Coloured filters for film photography" loading="lazy">
                 <div class="tool-content">
-                    <h3>Filter Factor Calculator</h3>
+                    <h2>Filter Factor Calculator</h2>
                     <p>Work out exposure compensation for ND or coloured filters; get corrected shutter speeds.</p>
                     <a href="filterfactor.html" class="btn">Use Tool</a>
                 </div>
