@@ -695,6 +695,7 @@
       <div class="button-group">
         <button class="secondary-btn" id="add-step-btn">Add Step</button>
         <button class="secondary-btn" id="load-template-btn">Load Template</button>
+        <button class="secondary-btn" id="create-new-btn">Create New</button>
         <button class="primary-btn" id="save-combination-btn">Save Combination</button>
       </div>
     </div>
@@ -862,6 +863,7 @@
         // Buttons
         document.getElementById('add-step-btn').addEventListener('click', () => this.addStep());
         document.getElementById('load-template-btn').addEventListener('click', () => this.loadTemplate());
+        document.getElementById('create-new-btn').addEventListener('click', () => this.createNewCombination());
         document.getElementById('save-combination-btn').addEventListener('click', () => this.saveCombination());
         document.getElementById('calculate-btn').addEventListener('click', () => this.calculateDevelopment());
         document.getElementById('start-pause-btn').addEventListener('click', () => this.startDevelopment());
@@ -1105,6 +1107,29 @@
         }
       }
       
+      createNewCombination() {
+        this.clearCombinationForm();
+        this.switchTab('create-tab');
+      }
+      
+      clearCombinationForm() {
+        document.getElementById('combination-name').value = '';
+        document.getElementById('film-name').value = '';
+        document.getElementById('developer-name').value = '';
+        document.getElementById('dilution-ratio').value = '';
+        document.getElementById('base-temperature').value = this.settings.defaultTemperature;
+        document.getElementById('base-time').value = '';
+        document.getElementById('agitation-instructions').value = '';
+        
+        // Clear steps but keep at least one empty step
+        const container = document.getElementById('steps-container');
+        container.innerHTML = '';
+        this.addStepToUI({ name: '', duration: 60, instructions: '' });
+        
+        this.editingCombinationId = null;
+        this.currentCombination = null;
+      }
+      
       saveCombination() {
         const name = document.getElementById('combination-name').value.trim();
         const filmName = document.getElementById('film-name').value.trim();
@@ -1166,6 +1191,9 @@
         this.saveCombinations();
         this.updateCombinationDropdown();
         this.renderCombinationsList();
+        
+        // Clear the form for next creation
+        this.clearCombinationForm();
         
         this.showNotification('Combination saved successfully!', 'success');
         this.switchTab('manage-tab');
