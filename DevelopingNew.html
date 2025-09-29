@@ -6,6 +6,7 @@
   <title>Film Development Assistant</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
+    /* CSS remains the same as in original - no changes needed */
     :root {
       --primary: #e74c3c;
       --primary-dark: #c0392b;
@@ -529,6 +530,110 @@
       font-size: 0.8rem;
     }
     
+    .curve-settings {
+      background: rgba(231, 76, 60, 0.05);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      border-left: 3px solid var(--primary);
+      margin: 1rem 0;
+    }
+    
+    .curve-preset {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .curve-preset-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      min-width: auto;
+      flex: none;
+    }
+    
+    .curve-values {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .curve-value {
+      text-align: center;
+      padding: 0.5rem;
+      background: white;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-light);
+    }
+    
+    .curve-value .label {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-bottom: 0.25rem;
+    }
+    
+    .curve-value .value {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .dark-mode .curve-value {
+      background: var(--input-dark);
+      border-color: var(--border-dark);
+    }
+    
+    .developer-management {
+      background: rgba(231, 76, 60, 0.05);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      border-left: 3px solid var(--primary);
+      margin: 1rem 0;
+    }
+    
+    .developer-item {
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid var(--border-light);
+      border-radius: var(--border-radius);
+      background: white;
+    }
+    
+    .dark-mode .developer-item {
+      background: var(--input-dark);
+      border-color: var(--border-dark);
+    }
+    
+    .developer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .developer-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .developer-curve {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+    
+    .developer-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .custom-developer-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
     @media (max-width: 768px) {
       body {
         padding: 1rem;
@@ -580,6 +685,19 @@
         flex-direction: column;
         align-items: flex-start;
       }
+      
+      .curve-values {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .curve-preset {
+        flex-direction: column;
+      }
+      
+      .custom-developer-form {
+        grid-template-columns: 1fr;
+      }
     }
     
     @media (prefers-reduced-motion: reduce) {
@@ -606,6 +724,7 @@
       <div class="tab active" data-tab="use-tab">Use Combination</div>
       <div class="tab" data-tab="create-tab">Create/Edit Combination</div>
       <div class="tab" data-tab="manage-tab">Manage Combinations</div>
+      <div class="tab" data-tab="developers-tab">Manage Developers</div>
       <div class="tab" data-tab="settings-tab">Settings</div>
     </div>
     
@@ -664,7 +783,10 @@
       
       <div class="input-group">
         <label for="developer-name">Developer Name</label>
-        <input type="text" id="developer-name" placeholder="e.g., Kodak HC-110" />
+        <select id="developer-name">
+          <option value="">-- Select a developer --</option>
+        </select>
+        <div class="info-text">Can't find your developer? Add it in the "Manage Developers" tab.</div>
       </div>
       
       <div class="input-group">
@@ -687,6 +809,55 @@
         <textarea id="agitation-instructions" placeholder="e.g., Continuous first 30s, then 2 inversions every 30s"></textarea>
       </div>
       
+      <div class="curve-settings">
+        <h3>Push/Pull Development Curve</h3>
+        <div class="info-text" id="curve-description">
+          Different developers respond differently to push/pull processing. Select the curve that matches your developer:
+        </div>
+        
+        <div class="curve-preset">
+          <button class="curve-preset-btn secondary-btn" data-curve="compensating">Compensating (Rodinal, HC-110)</button>
+          <button class="curve-preset-btn secondary-btn" data-curve="standard">Standard (D-76, XTOL, ID-11)</button>
+          <button class="curve-preset-btn secondary-btn" data-curve="speed">Speed Enhancing (DD-X, Microphen)</button>
+          <button class="curve-preset-btn secondary-btn" data-curve="custom">Custom Curve</button>
+        </div>
+        
+        <div id="custom-curve-settings" style="display: none;">
+          <div class="custom-developer-form">
+            <div class="input-group">
+              <label>+1 Stop Adjustment (%)</label>
+              <input type="number" id="custom-1-stop" value="15" min="5" max="40" step="1">
+            </div>
+            <div class="input-group">
+              <label>+2 Stop Adjustment (%)</label>
+              <input type="number" id="custom-2-stops" value="37" min="20" max="80" step="1">
+            </div>
+            <div class="input-group">
+              <label>+3 Stop Adjustment (%)</label>
+              <input type="number" id="custom-3-stops" value="67" min="40" max="120" step="1">
+            </div>
+          </div>
+        </div>
+        
+        <div class="curve-values">
+          <div class="curve-value">
+            <div class="label">+1 Stop</div>
+            <div class="value" id="curve-1-stop">+15%</div>
+          </div>
+          <div class="curve-value">
+            <div class="label">+2 Stops</div>
+            <div class="value" id="curve-2-stops">+37%</div>
+          </div>
+          <div class="curve-value">
+            <div class="label">+3 Stops</div>
+            <div class="value" id="curve-3-stops">+67%</div>
+          </div>
+        </div>
+        
+        <input type="hidden" id="push-pull-curve" value="standard">
+        <input type="hidden" id="custom-curve-data" value="">
+      </div>
+      
       <h3>Development Steps</h3>
       <div id="steps-container">
         <!-- Steps will be added here dynamically -->
@@ -695,7 +866,6 @@
       <div class="button-group">
         <button class="secondary-btn" id="add-step-btn">Add Step</button>
         <button class="secondary-btn" id="load-template-btn">Load Template</button>
-        <button class="secondary-btn" id="create-new-btn">Create New</button>
         <button class="primary-btn" id="save-combination-btn">Save Combination</button>
       </div>
     </div>
@@ -720,6 +890,55 @@
           <button class="secondary-btn" id="export-btn">Export All</button>
           <button class="secondary-btn" id="import-btn">Import</button>
         </div>
+      </div>
+    </div>
+    
+    <!-- Developer Management Tab -->
+    <div id="developers-tab" class="tab-content">
+      <div class="developer-management">
+        <h3>Add New Developer</h3>
+        <div class="info-text">
+          Add custom developers with their specific push/pull characteristics.
+        </div>
+        
+        <div class="input-group">
+          <label for="new-developer-name">Developer Name</label>
+          <input type="text" id="new-developer-name" placeholder="e.g., Ilfosol 3">
+        </div>
+        
+        <div class="input-group">
+          <label for="new-developer-type">Developer Type</label>
+          <select id="new-developer-type">
+            <option value="standard">Standard (D-76, XTOL, ID-11)</option>
+            <option value="compensating">Compensating (Rodinal, HC-110)</option>
+            <option value="speed">Speed Enhancing (DD-X, Microphen)</option>
+            <option value="custom">Custom Curve</option>
+          </select>
+        </div>
+        
+        <div id="new-custom-curve" style="display: none;">
+          <div class="custom-developer-form">
+            <div class="input-group">
+              <label>+1 Stop Adjustment (%)</label>
+              <input type="number" id="new-1-stop" value="15" min="5" max="40" step="1">
+            </div>
+            <div class="input-group">
+              <label>+2 Stop Adjustment (%)</label>
+              <input type="number" id="new-2-stops" value="37" min="20" max="80" step="1">
+            </div>
+            <div class="input-group">
+              <label>+3 Stop Adjustment (%)</label>
+              <input type="number" id="new-3-stops" value="67" min="40" max="120" step="1">
+            </div>
+          </div>
+        </div>
+        
+        <button class="primary-btn" id="add-developer-btn">Add Developer</button>
+      </div>
+      
+      <h3>Custom Developers</h3>
+      <div id="developers-list">
+        <!-- Custom developers will be listed here -->
       </div>
     </div>
     
@@ -790,6 +1009,7 @@
     class FilmDevelopmentAssistant {
       constructor() {
         this.userCombinations = [];
+        this.customDevelopers = [];
         this.currentCombination = null;
         this.editingCombinationId = null;
         this.currentStep = 0;
@@ -812,6 +1032,25 @@
           confirmReset: true,
           adjustTimeTemperature: true,
           adjustTimeIso: true
+        };
+        
+        // Developer-specific push/pull curves
+        this.developerCurves = {
+          'compensating': {
+            name: 'Compensating',
+            description: 'Rodinal, HC-110, other compensating developers',
+            curve: [0.10, 0.18, 0.25] // +1 stop: 10%, +2 stops: 28%, +3 stops: 53%
+          },
+          'standard': {
+            name: 'Standard',
+            description: 'D-76, XTOL, ID-11, most standard developers',
+            curve: [0.15, 0.37, 0.67] // +1 stop: 15%, +2 stops: 37%, +3 stops: 67%
+          },
+          'speed': {
+            name: 'Speed Enhancing',
+            description: 'DD-X, Microphen, other speed-enhancing developers',
+            curve: [0.20, 0.48, 0.88] // +1 stop: 20%, +2 stops: 48%, +3 stops: 88%
+          }
         };
         
         this.developmentStepTemplates = {
@@ -840,17 +1079,24 @@
       init() {
         this.loadSettings();
         this.loadCombinations();
+        this.loadCustomDevelopers();
         this.setupEventListeners();
         this.setupDefaultSteps();
         this.updateCombinationDropdown();
+        this.updateDeveloperDropdown();
         this.renderCombinationsList();
+        this.renderDevelopersList();
         this.applySettings();
+        this.setupCurvePresets();
         
         // Setup audio context
         try {
           this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         } catch (e) {
           console.warn("Audio context not supported:", e);
+          this.soundEnabled = false;
+          document.getElementById('sound-toggle').textContent = 'Sound: Unavailable';
+          document.getElementById('sound-toggle').disabled = true;
         }
       }
       
@@ -863,7 +1109,6 @@
         // Buttons
         document.getElementById('add-step-btn').addEventListener('click', () => this.addStep());
         document.getElementById('load-template-btn').addEventListener('click', () => this.loadTemplate());
-        document.getElementById('create-new-btn').addEventListener('click', () => this.createNewCombination());
         document.getElementById('save-combination-btn').addEventListener('click', () => this.saveCombination());
         document.getElementById('calculate-btn').addEventListener('click', () => this.calculateDevelopment());
         document.getElementById('start-pause-btn').addEventListener('click', () => this.startDevelopment());
@@ -879,6 +1124,21 @@
         document.getElementById('reset-settings-btn').addEventListener('click', () => this.resetSettings());
         document.getElementById('convert-to-f').addEventListener('click', () => this.convertToFahrenheit());
         document.getElementById('convert-to-c').addEventListener('click', () => this.convertToCelsius());
+        document.getElementById('add-developer-btn').addEventListener('click', () => this.addCustomDeveloper());
+        
+        // Developer selection
+        document.getElementById('developer-name').addEventListener('change', () => this.onDeveloperChange());
+        
+        // Developer type change
+        document.getElementById('new-developer-type').addEventListener('change', (e) => {
+          const customCurveDiv = document.getElementById('new-custom-curve');
+          customCurveDiv.style.display = e.target.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // Custom curve inputs
+        document.getElementById('custom-1-stop').addEventListener('input', () => this.updateCustomCurveDisplay());
+        document.getElementById('custom-2-stops').addEventListener('input', () => this.updateCustomCurveDisplay());
+        document.getElementById('custom-3-stops').addEventListener('input', () => this.updateCustomCurveDisplay());
         
         // Combination selection
         document.getElementById('saved-combination').addEventListener('change', (e) => {
@@ -900,6 +1160,68 @@
         window.addEventListener('beforeunload', () => this.cleanup());
       }
       
+      setupCurvePresets() {
+        // Add event listeners to curve preset buttons
+        document.querySelectorAll('.curve-preset-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const curveType = e.target.dataset.curve;
+            this.selectCurvePreset(curveType);
+          });
+        });
+        
+        // Set default curve
+        this.selectCurvePreset('standard');
+      }
+      
+      selectCurvePreset(curveType) {
+        // Update hidden field
+        document.getElementById('push-pull-curve').value = curveType;
+        
+        // Show/hide custom curve settings
+        const customSettings = document.getElementById('custom-curve-settings');
+        if (curveType === 'custom') {
+          customSettings.style.display = 'block';
+          this.updateCustomCurveDisplay();
+        } else {
+          customSettings.style.display = 'none';
+          
+          // Update displayed values for preset curves
+          const curve = this.developerCurves[curveType];
+          if (curve) {
+            const [oneStop, twoStops, threeStops] = curve.curve;
+            document.getElementById('curve-1-stop').textContent = `+${Math.round(oneStop * 100)}%`;
+            document.getElementById('curve-2-stops').textContent = `+${Math.round(twoStops * 100)}%`;
+            document.getElementById('curve-3-stops').textContent = `+${Math.round(threeStops * 100)}%`;
+          }
+        }
+        
+        // Update button states
+        document.querySelectorAll('.curve-preset-btn').forEach(btn => {
+          if (btn.dataset.curve === curveType) {
+            btn.classList.add('primary-btn');
+            btn.classList.remove('secondary-btn');
+          } else {
+            btn.classList.remove('primary-btn');
+            btn.classList.add('secondary-btn');
+          }
+        });
+      }
+      
+      updateCustomCurveDisplay() {
+        const oneStop = parseInt(document.getElementById('custom-1-stop').value) || 15;
+        const twoStops = parseInt(document.getElementById('custom-2-stops').value) || 37;
+        const threeStops = parseInt(document.getElementById('custom-3-stops').value) || 67;
+        
+        document.getElementById('curve-1-stop').textContent = `+${oneStop}%`;
+        document.getElementById('curve-2-stops').textContent = `+${twoStops}%`;
+        document.getElementById('curve-3-stops').textContent = `+${threeStops}%`;
+        
+        // Store the custom curve data
+        document.getElementById('custom-curve-data').value = JSON.stringify([
+          oneStop / 100, twoStops / 100, threeStops / 100
+        ]);
+      }
+      
       switchTab(tabId) {
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -911,14 +1233,24 @@
         if (tabId === 'manage-tab') {
           this.renderCombinationsList();
           this.updateExportData();
+        } else if (tabId === 'developers-tab') {
+          this.renderDevelopersList();
         }
+        
+        // Show visual feedback
+        this.showNotification(`Switched to ${document.querySelector(`.tab[data-tab="${tabId}"]`).textContent}`, 'info', 1500);
       }
       
       // Settings management
       loadSettings() {
         const saved = localStorage.getItem('filmDevelopmentSettings');
         if (saved) {
-          this.settings = { ...this.settings, ...JSON.parse(saved) };
+          try {
+            this.settings = { ...this.settings, ...JSON.parse(saved) };
+          } catch (e) {
+            console.error('Error loading settings:', e);
+            this.showNotification('Error loading settings, using defaults', 'error');
+          }
         }
       }
       
@@ -932,9 +1264,14 @@
         this.settings.adjustTimeTemperature = document.getElementById('adjust-time-temperature').checked;
         this.settings.adjustTimeIso = document.getElementById('adjust-time-iso').checked;
         
-        localStorage.setItem('filmDevelopmentSettings', JSON.stringify(this.settings));
-        this.applySettings();
-        this.showNotification('Settings saved successfully', 'success');
+        try {
+          localStorage.setItem('filmDevelopmentSettings', JSON.stringify(this.settings));
+          this.applySettings();
+          this.showNotification('Settings saved successfully', 'success');
+        } catch (e) {
+          console.error('Error saving settings:', e);
+          this.showNotification('Error saving settings', 'error');
+        }
       }
       
       applySettings() {
@@ -962,21 +1299,23 @@
       }
       
       resetSettings() {
-        if (confirm('Reset all settings to defaults?')) {
-          this.settings = {
-            darkMode: false,
-            defaultTemperature: 20,
-            beepDuration: 0.15,
-            beepFrequency: 880,
-            autoSave: true,
-            confirmReset: true,
-            adjustTimeTemperature: true,
-            adjustTimeIso: true
-          };
-          localStorage.removeItem('filmDevelopmentSettings');
-          this.applySettings();
-          this.showNotification('Settings reset to defaults', 'success');
+        if (this.settings.confirmReset && !confirm('Reset all settings to defaults?')) {
+          return;
         }
+        
+        this.settings = {
+          darkMode: false,
+          defaultTemperature: 20,
+          beepDuration: 0.15,
+          beepFrequency: 880,
+          autoSave: true,
+          confirmReset: true,
+          adjustTimeTemperature: true,
+          adjustTimeIso: true
+        };
+        localStorage.removeItem('filmDevelopmentSettings');
+        this.applySettings();
+        this.showNotification('Settings reset to defaults', 'success');
       }
       
       toggleDarkMode() {
@@ -986,9 +1325,222 @@
       }
       
       toggleSound() {
+        if (!this.audioContext) {
+          this.showNotification('Audio not supported in this browser', 'warning');
+          return;
+        }
+        
         this.soundEnabled = !this.soundEnabled;
         document.getElementById('sound-toggle').textContent = `Sound: ${this.soundEnabled ? 'On' : 'Off'}`;
         this.saveSettings();
+      }
+      
+      // Custom Developer management
+      loadCustomDevelopers() {
+        const saved = localStorage.getItem('filmDevelopmentDevelopers');
+        if (saved) {
+          try {
+            this.customDevelopers = JSON.parse(saved);
+          } catch (e) {
+            console.error('Error loading custom developers:', e);
+            this.customDevelopers = [];
+            this.showNotification('Error loading custom developers', 'error');
+          }
+        }
+      }
+      
+      saveCustomDevelopers() {
+        try {
+          localStorage.setItem('filmDevelopmentDevelopers', JSON.stringify(this.customDevelopers));
+        } catch (e) {
+          console.error('Error saving custom developers:', e);
+          this.showNotification('Error saving custom developers', 'error');
+        }
+      }
+      
+      updateDeveloperDropdown() {
+        const dropdown = document.getElementById('developer-name');
+        const currentValue = dropdown.value;
+        
+        dropdown.innerHTML = '<option value="">-- Select a developer --</option>';
+        
+        // Add built-in developers
+        const builtInDevelopers = [
+          { name: 'Rodinal', curve: 'compensating' },
+          { name: 'HC-110', curve: 'compensating' },
+          { name: 'D-76', curve: 'standard' },
+          { name: 'ID-11', curve: 'standard' },
+          { name: 'XTOL', curve: 'standard' },
+          { name: 'Ilfosol 3', curve: 'standard' },
+          { name: 'DD-X', curve: 'speed' },
+          { name: 'Microphen', curve: 'speed' }
+        ];
+        
+        builtInDevelopers.forEach(dev => {
+          const option = document.createElement('option');
+          option.value = dev.name;
+          option.textContent = dev.name;
+          option.dataset.curve = dev.curve;
+          dropdown.appendChild(option);
+        });
+        
+        // Add custom developers
+        if (this.customDevelopers.length > 0) {
+          const separator = document.createElement('option');
+          separator.disabled = true;
+          separator.textContent = '── Custom Developers ──';
+          dropdown.appendChild(separator);
+          
+          this.customDevelopers.forEach(dev => {
+            const option = document.createElement('option');
+            option.value = dev.name;
+            option.textContent = dev.name;
+            option.dataset.curve = dev.curveType;
+            if (dev.curveType === 'custom') {
+              option.dataset.customCurve = JSON.stringify(dev.customCurve);
+            }
+            dropdown.appendChild(option);
+          });
+        }
+        
+        // Restore previous selection if still valid
+        if (currentValue) {
+          dropdown.value = currentValue;
+          this.onDeveloperChange();
+        }
+      }
+      
+      onDeveloperChange() {
+        const dropdown = document.getElementById('developer-name');
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+        
+        if (selectedOption && selectedOption.dataset.curve) {
+          const curveType = selectedOption.dataset.curve;
+          this.selectCurvePreset(curveType);
+          
+          // If it's a custom curve, apply the custom values
+          if (curveType === 'custom' && selectedOption.dataset.customCurve) {
+            try {
+              const customCurve = JSON.parse(selectedOption.dataset.customCurve);
+              const oneStopPercent = Math.round(customCurve[0] * 100);
+              const twoStopsPercent = Math.round(customCurve[1] * 100);
+              const threeStopsPercent = Math.round(customCurve[2] * 100);
+              
+              document.getElementById('custom-1-stop').value = oneStopPercent;
+              document.getElementById('custom-2-stops').value = twoStopsPercent;
+              document.getElementById('custom-3-stops').value = threeStopsPercent;
+              this.updateCustomCurveDisplay();
+            } catch (e) {
+              console.error('Error parsing custom curve:', e);
+            }
+          }
+        }
+      }
+      
+      renderDevelopersList() {
+        const container = document.getElementById('developers-list');
+        container.innerHTML = '';
+        
+        if (this.customDevelopers.length === 0) {
+          container.innerHTML = '<p>No custom developers added yet.</p>';
+          return;
+        }
+        
+        this.customDevelopers.forEach((dev, index) => {
+          const div = document.createElement('div');
+          div.className = 'developer-item';
+          
+          const curveName = this.developerCurves[dev.curveType]?.name || 'Custom';
+          let curveDesc;
+          if (dev.curveType === 'custom') {
+            const oneStop = Math.round(dev.customCurve[0] * 100);
+            const twoStops = Math.round(dev.customCurve[1] * 100);
+            const threeStops = Math.round(dev.customCurve[2] * 100);
+            curveDesc = `Custom: +${oneStop}%/+${twoStops}%/+${threeStops}%`;
+          } else {
+            curveDesc = this.developerCurves[dev.curveType]?.description;
+          }
+          
+          div.innerHTML = `
+            <div class="developer-header">
+              <div class="developer-name">${this.escapeHtml(dev.name)}</div>
+            </div>
+            <div class="developer-curve">${curveName} - ${curveDesc}</div>
+            <div class="developer-actions">
+              <button class="secondary-btn" data-action="delete-dev" data-index="${index}">Delete</button>
+            </div>
+          `;
+          
+          container.appendChild(div);
+        });
+        
+        // Add event listeners
+        container.querySelectorAll('button').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            const index = parseInt(e.target.dataset.index);
+            
+            if (action === 'delete-dev') {
+              this.deleteCustomDeveloper(index);
+            }
+          });
+        });
+      }
+      
+      addCustomDeveloper() {
+        const name = document.getElementById('new-developer-name').value.trim();
+        const type = document.getElementById('new-developer-type').value;
+        
+        if (!name) {
+          this.showNotification('Please enter a developer name', 'error');
+          return;
+        }
+        
+        // Check if developer already exists (case insensitive)
+        const nameLower = name.toLowerCase();
+        if (this.customDevelopers.some(dev => dev.name.toLowerCase() === nameLower)) {
+          this.showNotification('Developer already exists', 'error');
+          return;
+        }
+        
+        const developer = {
+          id: this.generateId(),
+          name,
+          curveType: type
+        };
+        
+        if (type === 'custom') {
+          const oneStop = parseInt(document.getElementById('new-1-stop').value) / 100;
+          const twoStops = parseInt(document.getElementById('new-2-stops').value) / 100;
+          const threeStops = parseInt(document.getElementById('new-3-stops').value) / 100;
+          
+          developer.customCurve = [oneStop, twoStops, threeStops];
+        }
+        
+        this.customDevelopers.push(developer);
+        this.saveCustomDevelopers();
+        this.updateDeveloperDropdown();
+        this.renderDevelopersList();
+        
+        // Clear form
+        document.getElementById('new-developer-name').value = '';
+        document.getElementById('new-developer-type').value = 'standard';
+        document.getElementById('new-custom-curve').style.display = 'none';
+        
+        this.showNotification(`Developer "${name}" added successfully`, 'success');
+      }
+      
+      deleteCustomDeveloper(index) {
+        if (this.settings.confirmReset && !confirm('Are you sure you want to delete this developer?')) {
+          return;
+        }
+        
+        const developer = this.customDevelopers[index];
+        this.customDevelopers.splice(index, 1);
+        this.saveCustomDevelopers();
+        this.updateDeveloperDropdown();
+        this.renderDevelopersList();
+        this.showNotification(`Developer "${developer.name}" deleted`, 'success');
       }
       
       // Combination management
@@ -1000,12 +1552,18 @@
           } catch (e) {
             console.error('Error loading combinations:', e);
             this.userCombinations = [];
+            this.showNotification('Error loading combinations', 'error');
           }
         }
       }
       
       saveCombinations() {
-        localStorage.setItem('filmDevelopmentCombinations', JSON.stringify(this.userCombinations));
+        try {
+          localStorage.setItem('filmDevelopmentCombinations', JSON.stringify(this.userCombinations));
+        } catch (e) {
+          console.error('Error saving combinations:', e);
+          this.showNotification('Error saving combinations', 'error');
+        }
       }
       
       updateCombinationDropdown() {
@@ -1035,6 +1593,7 @@
           div.innerHTML = `
             <div class="combination-name">${this.escapeHtml(combo.name)}</div>
             <div class="combination-details">${this.escapeHtml(combo.filmName)} with ${this.escapeHtml(combo.developerName)} ${this.escapeHtml(combo.dilutionRatio)}</div>
+            <div class="combination-details">Curve: ${this.developerCurves[combo.pushPullCurve]?.name || 'Standard'}</div>
             <div class="step-actions">
               <button class="secondary-btn" data-action="edit" data-id="${combo.id}">Edit</button>
               <button class="secondary-btn" data-action="delete" data-id="${combo.id}">Delete</button>
@@ -1086,6 +1645,30 @@
           document.getElementById('base-time').value = combo.baseTime;
           document.getElementById('agitation-instructions').value = combo.agitationInstructions;
           
+          // Load push/pull curve
+          if (combo.pushPullCurve) {
+            this.selectCurvePreset(combo.pushPullCurve);
+            
+            // If it's a custom curve, load the custom values
+            if (combo.pushPullCurve === 'custom' && combo.customCurveData) {
+              try {
+                const customCurve = JSON.parse(combo.customCurveData);
+                const oneStopPercent = Math.round(customCurve[0] * 100);
+                const twoStopsPercent = Math.round(customCurve[1] * 100);
+                const threeStopsPercent = Math.round(customCurve[2] * 100);
+                
+                document.getElementById('custom-1-stop').value = oneStopPercent;
+                document.getElementById('custom-2-stops').value = twoStopsPercent;
+                document.getElementById('custom-3-stops').value = threeStopsPercent;
+                this.updateCustomCurveDisplay();
+              } catch (e) {
+                console.error('Error parsing custom curve:', e);
+              }
+            }
+          } else {
+            this.selectCurvePreset('standard');
+          }
+          
           // Load steps
           const container = document.getElementById('steps-container');
           container.innerHTML = '';
@@ -1098,18 +1681,15 @@
       }
       
       deleteCombination(comboId) {
-        if (confirm('Are you sure you want to delete this combination?')) {
-          this.userCombinations = this.userCombinations.filter(c => c.id !== comboId);
-          this.saveCombinations();
-          this.updateCombinationDropdown();
-          this.renderCombinationsList();
-          this.showNotification('Combination deleted', 'success');
+        if (this.settings.confirmReset && !confirm('Are you sure you want to delete this combination?')) {
+          return;
         }
-      }
-      
-      createNewCombination() {
-        this.clearCombinationForm();
-        this.switchTab('create-tab');
+        
+        this.userCombinations = this.userCombinations.filter(c => c.id !== comboId);
+        this.saveCombinations();
+        this.updateCombinationDropdown();
+        this.renderCombinationsList();
+        this.showNotification('Combination deleted', 'success');
       }
       
       clearCombinationForm() {
@@ -1120,6 +1700,9 @@
         document.getElementById('base-temperature').value = this.settings.defaultTemperature;
         document.getElementById('base-time').value = '';
         document.getElementById('agitation-instructions').value = '';
+        
+        // Reset to standard curve
+        this.selectCurvePreset('standard');
         
         // Clear steps but keep at least one empty step
         const container = document.getElementById('steps-container');
@@ -1138,6 +1721,8 @@
         const baseTemperature = parseFloat(document.getElementById('base-temperature').value);
         const baseTime = parseInt(document.getElementById('base-time').value);
         const agitationInstructions = document.getElementById('agitation-instructions').value.trim();
+        const pushPullCurve = document.getElementById('push-pull-curve').value;
+        const customCurveData = pushPullCurve === 'custom' ? document.getElementById('custom-curve-data').value : '';
         
         if (!name || !filmName || !developerName || !dilutionRatio || isNaN(baseTemperature) || isNaN(baseTime)) {
           this.showNotification('Please fill in all required fields', 'error');
@@ -1171,6 +1756,8 @@
           baseTemperature,
           baseTime,
           agitationInstructions,
+          pushPullCurve,
+          customCurveData,
           steps,
           created: new Date().toISOString(),
           updated: new Date().toISOString()
@@ -1284,7 +1871,7 @@
       
       loadTemplate() {
         const templateType = prompt('Load template for: (bw or color)', 'bw');
-        if (templateType && this.developmentStepTemplates[templateType.toLowerCase()]) {
+        if (templateType && (templateType.toLowerCase() === 'bw' || templateType.toLowerCase() === 'color')) {
           const container = document.getElementById('steps-container');
           container.innerHTML = '';
           
@@ -1293,6 +1880,8 @@
           });
           
           this.showNotification(`Loaded ${templateType.toUpperCase()} template`, 'success');
+        } else {
+          this.showNotification('Invalid template type. Please enter "bw" or "color"', 'error');
         }
       }
       
@@ -1316,24 +1905,13 @@
           let developmentTime = this.currentCombination.baseTime;
           
           if (stops !== 0 && this.settings.adjustTimeIso) {
-            // Simple adjustment - you can make this more sophisticated
-            const adjustment = Math.pow(1.4, Math.abs(stops));
-            if (stops > 0) {
-              developmentTime *= adjustment;
-            } else {
-              developmentTime /= adjustment;
-            }
+            // Use developer-specific curve-based adjustment
+            developmentTime = this.calculateAdjustedTime(developmentTime, stops, this.currentCombination);
           }
           
           // Temperature adjustment
           if (temperature !== this.currentCombination.baseTemperature && this.settings.adjustTimeTemperature) {
-            const tempDiff = Math.abs(temperature - this.currentCombination.baseTemperature);
-            const adjustment = Math.pow(1.15, tempDiff);
-            if (temperature > this.currentCombination.baseTemperature) {
-              developmentTime /= adjustment;
-            } else {
-              developmentTime *= adjustment;
-            }
+            developmentTime = this.adjustForTemperature(developmentTime, temperature, this.currentCombination.baseTemperature);
           }
           
           developmentTime = Math.round(developmentTime / 5) * 5;
@@ -1353,12 +1931,72 @@
           this.displayDevelopmentSteps();
           
           if (stops !== 0) {
-            this.showNotification(`Development adjusted for ${stops > 0 ? '+' : ''}${stops.toFixed(1)} stops (${filmIso} → ${exposedIso} ISO)`, 'info');
+            const curveName = this.developerCurves[this.currentCombination.pushPullCurve]?.name || 'Custom';
+            this.showNotification(`Development adjusted for ${stops > 0 ? '+' : ''}${stops.toFixed(1)} stops using ${curveName} curve`, 'info');
           } else {
             this.showNotification('Development calculated successfully', 'success');
           }
         } catch (error) {
           this.showNotification(error.message, 'error');
+        }
+      }
+      
+      // Developer-specific curve-based time adjustment
+      calculateAdjustedTime(baseTime, stops, combination) {
+        const absStops = Math.abs(stops);
+        const isPush = stops > 0;
+        
+        // Get the curve for this combination
+        let curve;
+        if (combination.pushPullCurve === 'custom' && combination.customCurveData) {
+          // Use custom curve
+          try {
+            curve = JSON.parse(combination.customCurveData);
+          } catch (e) {
+            console.error('Error parsing custom curve:', e);
+            curve = this.developerCurves.standard.curve;
+          }
+        } else {
+          // Use preset curve
+          const curveType = combination.pushPullCurve || 'standard';
+          curve = this.developerCurves[curveType].curve;
+        }
+        
+        const [oneStop, twoStops, threeStops] = curve;
+        
+        let adjustmentFactor;
+        
+        if (absStops <= 1) {
+          adjustmentFactor = 1 + (oneStop * absStops);
+        } else if (absStops <= 2) {
+          adjustmentFactor = 1 + oneStop + (twoStops * (absStops - 1));
+        } else {
+          adjustmentFactor = 1 + oneStop + twoStops + (threeStops * (absStops - 2));
+        }
+        
+        // Apply the adjustment
+        if (isPush) {
+          return baseTime * adjustmentFactor;
+        } else {
+          return baseTime / adjustmentFactor;
+        }
+      }
+      
+      // Improved temperature adjustment
+      adjustForTemperature(baseTime, currentTemp, baseTemp) {
+        const tempDiff = Math.abs(currentTemp - baseTemp);
+        const isWarmer = currentTemp > baseTemp;
+        
+        // Temperature adjustments follow the Q10 rule
+        // Development time typically doubles/halves for every 10°C change
+        const q10Factor = 2.0; // Standard Q10 for film development
+        
+        if (tempDiff === 0) return baseTime;
+        
+        if (isWarmer) {
+          return baseTime / Math.pow(q10Factor, tempDiff / 10);
+        } else {
+          return baseTime * Math.pow(q10Factor, tempDiff / 10);
         }
       }
       
@@ -1383,18 +2021,25 @@
       parseAgitationInstructions(instructions, totalTime) {
         const pattern = [0]; // Always agitate at start
         
-        if (instructions.includes('every 30s') || instructions.includes('every 30 seconds')) {
-          for (let t = 30; t < totalTime; t += 30) {
-            pattern.push(t);
-          }
-        } else if (instructions.includes('every minute') || instructions.includes('every 60 seconds')) {
-          for (let t = 60; t < totalTime; t += 60) {
-            pattern.push(t);
-          }
-        } else if (instructions.includes('continuous')) {
+        // Parse different agitation patterns
+        if (instructions.includes('continuous')) {
           // For continuous agitation, agitate every 10 seconds
           for (let t = 10; t < totalTime; t += 10) {
             pattern.push(t);
+          }
+        } else {
+          // Parse interval-based agitation
+          const intervalMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
+          if (intervalMatch) {
+            const interval = parseInt(intervalMatch[1]);
+            for (let t = interval; t < totalTime; t += interval) {
+              pattern.push(t);
+            }
+          } else {
+            // Default to 30 seconds if no pattern found
+            for (let t = 30; t < totalTime; t += 30) {
+              pattern.push(t);
+            }
           }
         }
         
@@ -1440,8 +2085,14 @@
       }
       
       continueDevelopment() {
-        this.currentStep++;
-        this.startStep(this.currentStep);
+        if (this.isPaused) {
+          this.isPaused = false;
+          document.getElementById("countdown").classList.remove("paused");
+          this.startStep(this.currentStep);
+        } else {
+          this.currentStep++;
+          this.startStep(this.currentStep);
+        }
         
         document.getElementById("continue-btn").style.display = "none";
         document.getElementById("pause-btn").style.display = "";
@@ -1490,6 +2141,8 @@
         let expected = startTime + (this.developmentPlan[stepIndex].duration * 1000);
         
         const timerTick = () => {
+          if (this.isPaused) return;
+          
           const now = performance.now();
           const drift = now - expected;
           
@@ -1614,7 +2267,7 @@
         return div.innerHTML;
       }
       
-      showNotification(message, type = 'info') {
+      showNotification(message, type = 'info', duration = 3000) {
         const notification = document.getElementById('notification');
         notification.textContent = message;
         notification.className = `notification ${type}`;
@@ -1622,7 +2275,7 @@
         
         setTimeout(() => {
           notification.classList.remove('show');
-        }, 3000);
+        }, duration);
       }
       
       convertToFahrenheit() {
@@ -1630,6 +2283,7 @@
         if (!isNaN(celsius)) {
           const fahrenheit = (celsius * 9/5) + 32;
           document.getElementById('temperature').value = fahrenheit.toFixed(1);
+          this.showNotification(`Converted to ${fahrenheit.toFixed(1)}°F`, 'info', 2000);
         }
       }
       
@@ -1638,12 +2292,14 @@
         if (!isNaN(fahrenheit)) {
           const celsius = (fahrenheit - 32) * 5/9;
           document.getElementById('temperature').value = celsius.toFixed(1);
+          this.showNotification(`Converted to ${celsius.toFixed(1)}°C`, 'info', 2000);
         }
       }
       
       exportData() {
         const data = {
           combinations: this.userCombinations,
+          customDevelopers: this.customDevelopers,
           exportDate: new Date().toISOString(),
           version: '1.0'
         };
@@ -1661,11 +2317,15 @@
         try {
           const data = JSON.parse(importData);
           if (data.combinations && Array.isArray(data.combinations)) {
-            if (confirm('This will replace all current combinations. Continue?')) {
+            if (confirm('This will replace all current combinations and developers. Continue?')) {
               this.userCombinations = data.combinations;
+              this.customDevelopers = data.customDevelopers || [];
               this.saveCombinations();
+              this.saveCustomDevelopers();
               this.updateCombinationDropdown();
+              this.updateDeveloperDropdown();
               this.renderCombinationsList();
+              this.renderDevelopersList();
               this.showNotification('Data imported successfully', 'success');
             }
           } else {
@@ -1679,6 +2339,7 @@
       updateExportData() {
         const data = {
           combinations: this.userCombinations,
+          customDevelopers: this.customDevelopers,
           exportDate: new Date().toISOString(),
           version: '1.0'
         };
