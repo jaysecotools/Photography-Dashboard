@@ -556,6 +556,7 @@
       <div class="input-group">
         <label for="agitation-instructions">Agitation Instructions</label>
         <textarea id="agitation-instructions" placeholder="e.g., Continuous first 30s, then 2 inversions every 30s"></textarea>
+        <div class="info-text" id="agitation-preview"></div>
       </div>
       
       <div class="button-group">
@@ -594,6 +595,7 @@
         <div class="button-group">
           <button class="secondary-btn" id="export-btn">Export All Combinations</button>
           <button class="secondary-btn" id="import-btn">Import Combinations</button>
+          <button class="reset-btn" id="reset-all-btn">Reset All Data</button>
         </div>
       </div>
     </div>
@@ -620,7 +622,8 @@
         this.audioContext = null;
         this.soundEnabled = true;
         this.settings = {
-          darkMode: false
+          darkMode: false,
+          soundEnabled: true
         };
         
         this.init();
@@ -634,6 +637,7 @@
         this.renderCombinationsList();
         this.applySettings();
         this.updateExportData();
+        this.initAudio();
       }
       
       setupEventListeners() {
@@ -653,6 +657,7 @@
         document.getElementById('dark-mode-toggle').addEventListener('click', () => this.toggleDarkMode());
         document.getElementById('export-btn').addEventListener('click', () => this.exportData());
         document.getElementById('import-btn').addEventListener('click', () => this.importData());
+        document.getElementById('reset-all-btn').addEventListener('click', () => this.resetAllData());
         
         // Combination selection
         document.getElementById('saved-combination').addEventListener('change', (e) => {
@@ -664,6 +669,11 @@
         // Temperature change
         document.getElementById('temperature').addEventListener('change', () => {
           this.updateTemperatureAdjustment();
+        });
+        
+        // Agitation instructions preview
+        document.getElementById('agitation-instructions').addEventListener('input', () => {
+          this.previewAgitationPattern();
         });
         
         // Handle beforeunload for cleanup
@@ -686,6 +696,39 @@
           if (!this.editingCombinationId) {
             this.clearCombinationForm();
           }
+        }
+      }
+      
+      // Audio initialization
+      initAudio() {
+        try {
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+          console.warn('Web Audio API not supported:', e);
+          this.soundEnabled = false;
+        }
+      }
+      
+      playBeep(frequency = 800, duration = 0.2) {
+        if (!this.soundEnabled || !this.audioContext || !this.settings.soundEnabled) return;
+        
+        try {
+          const oscillator = this.audioContext.createOscillator();
+          const gainNode = this.audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(this.audioContext.destination);
+          
+          oscillator.frequency.value = frequency;
+          oscillator.type = 'sine';
+          
+          gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+          
+          oscillator.start(this.audioContext.currentTime);
+          oscillator.stop(this.audioContext.currentTime + duration);
+        } catch (e) {
+          console.warn('Error playing sound:', e);
         }
       }
       
@@ -744,9 +787,15 @@
       saveCombinations() {
         try {
           localStorage.setItem('filmDevelopmentCombinations', JSON.stringify(this.userCombinations));
+          return true;
         } catch (e) {
           console.error('Error saving combinations:', e);
-          this.showNotification('Error saving combinations', 'error');
+          if (e.name === 'QuotaExceededError') {
+            this.showNotification('Storage limit exceeded. Please delete some combinations.', 'error');
+          } else {
+            this.showNotification('Error saving combinations', 'error');
+          }
+          return false;
         }
       }
       
@@ -841,6 +890,9 @@
           document.getElementById('cancel-edit-btn').style.display = '';
           document.getElementById('edit-info').style.display = 'block';
           
+          // Preview agitation pattern
+          this.previewAgitationPattern();
+          
           this.switchTab('create-tab');
           this.showNotification(`Editing combination: ${combo.name}`, 'info');
         } else {
@@ -859,10 +911,11 @@
       deleteCombination(comboId) {
         if (confirm('Are you sure you want to delete this combination?')) {
           this.userCombinations = this.userCombinations.filter(c => c.id !== comboId);
-          this.saveCombinations();
-          this.updateCombinationDropdown();
-          this.renderCombinationsList();
-          this.showNotification('Combination deleted', 'success');
+          if (this.saveCombinations()) {
+            this.updateCombinationDropdown();
+            this.renderCombinationsList();
+            this.showNotification('Combination deleted', 'success');
+          }
         }
       }
       
@@ -874,6 +927,7 @@
         document.getElementById('base-temperature').value = 20;
         document.getElementById('base-time').value = '';
         document.getElementById('agitation-instructions').value = '';
+        document.getElementById('agitation-preview').textContent = '';
         
         // Hide edit mode UI
         document.getElementById('cancel-edit-btn').style.display = 'none';
@@ -921,6 +975,17 @@
           return;
         }
         
+        // Check for duplicate names (excluding the one we're editing)
+        const existingCombo = this.userCombinations.find(c => 
+          c.name.toLowerCase() === name.toLowerCase() && 
+          c.id !== this.editingCombinationId
+        );
+        
+        if (existingCombo) {
+          this.showNotification(`A combination named "${name}" already exists`, 'error');
+          return;
+        }
+        
         const comboData = {
           id: this.editingCombinationId || this.generateId(),
           name,
@@ -947,15 +1012,16 @@
           this.showNotification('Combination saved successfully!', 'success');
         }
         
-        this.saveCombinations();
-        this.updateCombinationDropdown();
-        this.renderCombinationsList();
-        
-        // Clear the form and exit edit mode
-        this.clearCombinationForm();
-        
-        // Switch to manage tab to see the updated list
-        this.switchTab('manage-tab');
+        if (this.saveCombinations()) {
+          this.updateCombinationDropdown();
+          this.renderCombinationsList();
+          
+          // Clear the form and exit edit mode
+          this.clearCombinationForm();
+          
+          // Switch to manage tab to see the updated list
+          this.switchTab('manage-tab');
+        }
       }
       
       createDevelopmentPlan(combo) {
@@ -1012,17 +1078,19 @@
       }
       
       calculateAdjustedTime(baseTime, baseTemp, currentTemp) {
-        // Simple temperature adjustment using the rule of thumb:
-        // For every 1°C above 20°C, decrease time by 10-15%
-        // For every 1°C below 20°C, increase time by 10-15%
-        // This is a simplified version - real film development uses more complex formulas
+        // More accurate temperature adjustment using the Arrhenius equation
+        // Standard Q10 value for film development is approximately 2.0
+        // This means development time doubles for every 10°C increase in temperature
         
         if (baseTemp === currentTemp) return baseTime;
         
+        const Q10 = 2.0; // Standard value for film development
         const tempDiff = currentTemp - baseTemp;
-        const adjustmentFactor = 0.1; // 10% adjustment per degree
         
-        return baseTime * (1 + (tempDiff * adjustmentFactor));
+        // Calculate adjustment factor
+        const adjustmentFactor = Math.pow(Q10, tempDiff / 10);
+        
+        return baseTime * adjustmentFactor;
       }
       
       updateTemperatureAdjustment() {
@@ -1039,6 +1107,21 @@
         } else {
           document.getElementById('temp-adjustment-info').textContent = '';
         }
+      }
+      
+      previewAgitationPattern() {
+        const instructions = document.getElementById('agitation-instructions').value;
+        const baseTime = parseFloat(document.getElementById('base-time').value) || 5;
+        const totalSeconds = baseTime * 60;
+        
+        if (!instructions) {
+          document.getElementById('agitation-preview').textContent = '';
+          return;
+        }
+        
+        const pattern = this.parseAgitationInstructions(instructions, totalSeconds);
+        const previewText = `Agitation points: ${pattern.length > 1 ? pattern.slice(1).map(t => this.formatTime(t)).join(', ') : 'none'}`;
+        document.getElementById('agitation-preview').textContent = previewText;
       }
       
       // Import/Export functionality
@@ -1099,18 +1182,30 @@
               }
             });
             
-            this.saveCombinations();
-            this.updateCombinationDropdown();
-            this.renderCombinationsList();
-            this.updateExportData();
-            
-            this.showNotification(`Successfully imported ${data.combinations.length} combination(s)`, 'success');
-            
-            // Clear the import field
-            document.getElementById('import-data').value = '';
+            if (this.saveCombinations()) {
+              this.updateCombinationDropdown();
+              this.renderCombinationsList();
+              this.updateExportData();
+              
+              this.showNotification(`Successfully imported ${data.combinations.length} combination(s)`, 'success');
+              
+              // Clear the import field
+              document.getElementById('import-data').value = '';
+            }
           }
         } catch (e) {
           this.showNotification('Invalid JSON data: ' + e.message, 'error');
+        }
+      }
+      
+      resetAllData() {
+        if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
+          this.userCombinations = [];
+          this.saveCombinations();
+          this.updateCombinationDropdown();
+          this.renderCombinationsList();
+          this.updateExportData();
+          this.showNotification('All data has been reset', 'info');
         }
       }
       
@@ -1150,6 +1245,8 @@
         document.getElementById("start-btn").style.display = "none";
         document.getElementById("pause-btn").style.display = "";
         document.getElementById("resume-btn").style.display = "none";
+        
+        this.playBeep(600, 0.3);
       }
       
       pauseDevelopment() {
@@ -1158,6 +1255,8 @@
         document.getElementById("pause-btn").style.display = "none";
         document.getElementById("resume-btn").style.display = "";
         document.getElementById("countdown").classList.add("paused");
+        
+        this.playBeep(400, 0.2);
       }
       
       resumeDevelopment() {
@@ -1166,6 +1265,8 @@
         document.getElementById("pause-btn").style.display = "";
         document.getElementById("countdown").classList.remove("paused");
         this.startStep(this.currentStep);
+        
+        this.playBeep(600, 0.2);
       }
       
       startStep(stepIndex) {
@@ -1235,6 +1336,9 @@
         alertElement.textContent = "AGITATE NOW! " + this.developmentPlan[this.currentStep].instructions;
         alertElement.classList.remove("hidden");
         
+        // Play agitation alert sound
+        this.playBeep(1000, 0.5);
+        
         setTimeout(() => {
           alertElement.classList.add("hidden");
         }, 8000);
@@ -1245,6 +1349,9 @@
         this.currentStep++;
         
         if (this.currentStep < this.developmentPlan.length) {
+          // Play step completion sound
+          this.playBeep(800, 0.3);
+          
           // Auto-advance to next step after a short delay
           setTimeout(() => {
             if (!this.isPaused) {
@@ -1264,6 +1371,12 @@
         document.getElementById("start-btn").style.display = "";
         document.getElementById("pause-btn").style.display = "none";
         document.getElementById("resume-btn").style.display = "none";
+        
+        // Play completion sound
+        this.playBeep(600, 0.2);
+        setTimeout(() => this.playBeep(800, 0.2), 300);
+        setTimeout(() => this.playBeep(1000, 0.3), 600);
+        
         this.showNotification("Development process completed!", "success");
       }
       
@@ -1331,6 +1444,30 @@
             }
           } else {
             // Default to 30 seconds if no interval found
+            for (let t = 30; t < totalTime; t += 30) {
+              pattern.push(t);
+            }
+          }
+        } else if (lowerInstructions.includes('first') && lowerInstructions.includes('then')) {
+          // Parse patterns like "continuous first 30s, then 2 inversions every 30s"
+          const firstMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
+          const thenMatch = instructions.match(/then.*?(\d+)\s*(seconds|s|sec)/i);
+          
+          if (firstMatch && thenMatch) {
+            const firstInterval = parseInt(firstMatch[1]);
+            const thenInterval = parseInt(thenMatch[1]);
+            
+            // Add continuous agitation for first period
+            for (let t = 10; t < firstInterval && t < totalTime; t += 10) {
+              pattern.push(t);
+            }
+            
+            // Add interval agitation for remaining time
+            for (let t = firstInterval; t < totalTime; t += thenInterval) {
+              pattern.push(t);
+            }
+          } else {
+            // Default pattern if parsing fails
             for (let t = 30; t < totalTime; t += 30) {
               pattern.push(t);
             }
