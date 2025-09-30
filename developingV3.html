@@ -416,8 +416,42 @@
       animation: spin 1s ease-in-out infinite;
     }
     
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .checkbox-group label {
+      margin-bottom: 0;
+      font-weight: normal;
+    }
+    
+    .step-config {
+      background: var(--primary-light);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      margin-bottom: 1rem;
+    }
+    
+    .step-config h3 {
+      margin-top: 0;
+      color: var(--primary);
+      font-size: 1rem;
+    }
+    
+    .step-complete {
+      background: rgba(39, 174, 96, 0.1);
+      border-left: 4px solid var(--success);
+    }
+    
+    .next-step-prompt {
+      background: rgba(52, 152, 219, 0.1);
+      border-left: 4px solid var(--info);
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: var(--border-radius);
     }
     
     @media (max-width: 768px) {
@@ -513,6 +547,7 @@
         <button class="primary-btn" id="start-btn">Start Development</button>
         <button class="secondary-btn" id="pause-btn" style="display:none;">Pause</button>
         <button class="secondary-btn" id="resume-btn" style="display:none;">Resume</button>
+        <button class="primary-btn" id="next-step-btn" style="display:none;">Next Step</button>
         <button class="reset-btn" id="reset-btn">Reset</button>
       </div>
       
@@ -554,9 +589,63 @@
       </div>
       
       <div class="input-group">
-        <label for="agitation-instructions">Agitation Instructions</label>
-        <textarea id="agitation-instructions" placeholder="e.g., Continuous first 30s, then 2 inversions every 30s"></textarea>
+        <label for="agitation-pattern">Agitation Pattern</label>
+        <select id="agitation-pattern">
+          <option value="continuous-30-then-60">Continuous first 30s, then 4 inversions every 60s</option>
+          <option value="continuous-30-then-30">Continuous first 30s, then 4 inversions every 30s</option>
+          <option value="every-30">4 inversions every 30s</option>
+          <option value="every-60">4 inversions every 60s</option>
+          <option value="custom">Custom (enter instructions below)</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label for="agitation-instructions">Custom Agitation Instructions</label>
+        <textarea id="agitation-instructions" placeholder="e.g., Continuous first 30s, then 4 inversions every 60s"></textarea>
         <div class="info-text" id="agitation-preview"></div>
+      </div>
+      
+      <div class="step-config">
+        <h3>Development Steps Configuration</h3>
+        
+        <div class="input-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="include-presoak" checked />
+            <label for="include-presoak">Include Pre-soak Step</label>
+          </div>
+          <div class="info-text">Soak film in water at same temperature as developer</div>
+        </div>
+        
+        <div class="input-group">
+          <label for="stop-bath-duration">Stop Bath Duration (seconds)</label>
+          <input type="number" id="stop-bath-duration" min="10" max="300" value="30" />
+          <div class="info-text">Use stop bath or water rinse</div>
+        </div>
+        
+        <div class="input-group">
+          <label for="fixer-duration">Fixer Duration (seconds)</label>
+          <input type="number" id="fixer-duration" min="30" max="600" value="300" />
+          <div class="info-text">Use rapid fixer with appropriate agitation</div>
+        </div>
+        
+        <div class="input-group">
+          <label for="wash-duration">Wash Duration (seconds)</label>
+          <input type="number" id="wash-duration" min="60" max="1800" value="600" />
+          <div class="info-text">Rinse with water, change water periodically</div>
+        </div>
+        
+        <div class="input-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="include-photoflo" checked />
+            <label for="include-photoflo">Include Photo-Flo Step</label>
+          </div>
+          <div class="info-text">Use wetting agent to prevent water spots</div>
+        </div>
+        
+        <div class="input-group">
+          <label for="photoflo-duration">Photo-Flo Duration (seconds)</label>
+          <input type="number" id="photoflo-duration" min="10" max="120" value="60" />
+        </div>
       </div>
       
       <div class="button-group">
@@ -621,6 +710,10 @@
         this.currentAgitationIndex = 0;
         this.audioContext = null;
         this.soundEnabled = true;
+        this.timerStartTime = 0;
+        this.timerPauseTime = 0;
+        this.timerPausedDuration = 0;
+        this.stepComplete = false;
         this.settings = {
           darkMode: false,
           soundEnabled: true
@@ -653,6 +746,7 @@
         document.getElementById('start-btn').addEventListener('click', () => this.startDevelopment());
         document.getElementById('pause-btn').addEventListener('click', () => this.pauseDevelopment());
         document.getElementById('resume-btn').addEventListener('click', () => this.resumeDevelopment());
+        document.getElementById('next-step-btn').addEventListener('click', () => this.nextStep());
         document.getElementById('reset-btn').addEventListener('click', () => this.resetCalculator());
         document.getElementById('dark-mode-toggle').addEventListener('click', () => this.toggleDarkMode());
         document.getElementById('export-btn').addEventListener('click', () => this.exportData());
@@ -669,6 +763,11 @@
         // Temperature change
         document.getElementById('temperature').addEventListener('change', () => {
           this.updateTemperatureAdjustment();
+        });
+        
+        // Agitation pattern change
+        document.getElementById('agitation-pattern').addEventListener('change', () => {
+          this.updateAgitationInstructions();
         });
         
         // Agitation instructions preview
@@ -884,7 +983,17 @@
           document.getElementById('dilution-ratio').value = combo.dilutionRatio;
           document.getElementById('base-temperature').value = combo.baseTemperature;
           document.getElementById('base-time').value = combo.baseTime;
+          document.getElementById('agitation-pattern').value = combo.agitationPattern || 'continuous-30-then-60';
           document.getElementById('agitation-instructions').value = combo.agitationInstructions;
+          document.getElementById('include-presoak').checked = combo.includePresoak !== false;
+          document.getElementById('stop-bath-duration').value = combo.stopBathDuration || 30;
+          document.getElementById('fixer-duration').value = combo.fixerDuration || 300;
+          document.getElementById('wash-duration').value = combo.washDuration || 600;
+          document.getElementById('include-photoflo').checked = combo.includePhotoflo !== false;
+          document.getElementById('photoflo-duration').value = combo.photofloDuration || 60;
+          
+          // Update agitation instructions based on pattern
+          this.updateAgitationInstructions();
           
           // Show edit mode UI
           document.getElementById('cancel-edit-btn').style.display = '';
@@ -926,13 +1035,49 @@
         document.getElementById('dilution-ratio').value = '';
         document.getElementById('base-temperature').value = 20;
         document.getElementById('base-time').value = '';
+        document.getElementById('agitation-pattern').value = 'continuous-30-then-60';
         document.getElementById('agitation-instructions').value = '';
+        document.getElementById('include-presoak').checked = true;
+        document.getElementById('stop-bath-duration').value = 30;
+        document.getElementById('fixer-duration').value = 300;
+        document.getElementById('wash-duration').value = 600;
+        document.getElementById('include-photoflo').checked = true;
+        document.getElementById('photoflo-duration').value = 60;
         document.getElementById('agitation-preview').textContent = '';
+        
+        // Update agitation instructions based on default pattern
+        this.updateAgitationInstructions();
         
         // Hide edit mode UI
         document.getElementById('cancel-edit-btn').style.display = 'none';
         document.getElementById('edit-info').style.display = 'none';
         this.editingCombinationId = null;
+      }
+      
+      updateAgitationInstructions() {
+        const pattern = document.getElementById('agitation-pattern').value;
+        let instructions = '';
+        
+        switch(pattern) {
+          case 'continuous-30-then-60':
+            instructions = 'Continuous first 30s, then 4 inversions every 60s';
+            break;
+          case 'continuous-30-then-30':
+            instructions = 'Continuous first 30s, then 4 inversions every 30s';
+            break;
+          case 'every-30':
+            instructions = '4 inversions every 30s';
+            break;
+          case 'every-60':
+            instructions = '4 inversions every 60s';
+            break;
+          case 'custom':
+            // Keep existing custom instructions
+            return;
+        }
+        
+        document.getElementById('agitation-instructions').value = instructions;
+        this.previewAgitationPattern();
       }
       
       saveCombination() {
@@ -942,7 +1087,14 @@
         const dilutionRatio = document.getElementById('dilution-ratio').value.trim();
         const baseTemperature = parseFloat(document.getElementById('base-temperature').value);
         const baseTime = parseFloat(document.getElementById('base-time').value);
+        const agitationPattern = document.getElementById('agitation-pattern').value;
         const agitationInstructions = document.getElementById('agitation-instructions').value.trim();
+        const includePresoak = document.getElementById('include-presoak').checked;
+        const stopBathDuration = parseInt(document.getElementById('stop-bath-duration').value);
+        const fixerDuration = parseInt(document.getElementById('fixer-duration').value);
+        const washDuration = parseInt(document.getElementById('wash-duration').value);
+        const includePhotoflo = document.getElementById('include-photoflo').checked;
+        const photofloDuration = parseInt(document.getElementById('photoflo-duration').value);
         
         // Validation
         if (!name) {
@@ -994,7 +1146,14 @@
           dilutionRatio,
           baseTemperature,
           baseTime,
+          agitationPattern,
           agitationInstructions,
+          includePresoak,
+          stopBathDuration,
+          fixerDuration,
+          washDuration,
+          includePhotoflo,
+          photofloDuration,
           created: new Date().toISOString(),
           updated: new Date().toISOString()
         };
@@ -1037,57 +1196,68 @@
         // Parse agitation instructions
         const agitationPattern = this.parseAgitationInstructions(combo.agitationInstructions, devTimeSeconds);
         
-        return [
-          { 
+        const developmentPlan = [];
+        
+        // Add pre-soak step only if included
+        if (combo.includePresoak !== false) {
+          developmentPlan.push({ 
             name: "Pre-soak", 
             duration: 60, 
             instructions: "Soak film in water at same temperature as developer",
             agitationPattern: []
-          },
-          { 
-            name: "Developer", 
-            duration: devTimeSeconds, 
-            instructions: combo.agitationInstructions,
-            agitationPattern: agitationPattern
-          },
-          { 
-            name: "Stop Bath", 
-            duration: 30, 
+          });
+        }
+        
+        // Add developer step
+        developmentPlan.push({ 
+          name: "Developer", 
+          duration: devTimeSeconds, 
+          instructions: combo.agitationInstructions,
+          agitationPattern: agitationPattern
+        });
+        
+        // Add stop bath step
+        developmentPlan.push({ 
+          name: "Stop Bath", 
+          duration: combo.stopBathDuration || 30, 
             instructions: "Use stop bath or water rinse with continuous agitation",
-            agitationPattern: []
-          },
-          { 
-            name: "Fixer", 
-            duration: 300, 
-            instructions: "Use rapid fixer with appropriate agitation",
-            agitationPattern: []
-          },
-          { 
-            name: "Wash", 
-            duration: 600, 
-            instructions: "Rinse with water, change water periodically",
-            agitationPattern: []
-          },
-          { 
+          agitationPattern: []
+        });
+        
+        // Add fixer step
+        developmentPlan.push({ 
+          name: "Fixer", 
+          duration: combo.fixerDuration || 300, 
+          instructions: "Use rapid fixer with appropriate agitation",
+          agitationPattern: []
+        });
+        
+        // Add wash step
+        developmentPlan.push({ 
+          name: "Wash", 
+          duration: combo.washDuration || 600, 
+          instructions: "Rinse with water, change water periodically",
+          agitationPattern: []
+        });
+        
+        // Add photo-flo step only if included
+        if (combo.includePhotoflo !== false) {
+          developmentPlan.push({ 
             name: "Photo-Flo", 
-            duration: 60, 
+            duration: combo.photofloDuration || 60, 
             instructions: "Use wetting agent to prevent water spots",
             agitationPattern: []
-          }
-        ];
+          });
+        }
+        
+        return developmentPlan;
       }
       
       calculateAdjustedTime(baseTime, baseTemp, currentTemp) {
-        // More accurate temperature adjustment using the Arrhenius equation
-        // Standard Q10 value for film development is approximately 2.0
-        // This means development time doubles for every 10°C increase in temperature
-        
         if (baseTemp === currentTemp) return baseTime;
         
-        const Q10 = 2.0; // Standard value for film development
+        const Q10 = 2.0;
         const tempDiff = currentTemp - baseTemp;
-        
-        // Calculate adjustment factor
         const adjustmentFactor = Math.pow(Q10, tempDiff / 10);
         
         return baseTime * adjustmentFactor;
@@ -1240,11 +1410,14 @@
         
         this.currentStep = 0;
         this.isPaused = false;
+        this.stepComplete = false;
+        this.timerPausedDuration = 0;
         this.startStep(this.currentStep);
         
         document.getElementById("start-btn").style.display = "none";
         document.getElementById("pause-btn").style.display = "";
         document.getElementById("resume-btn").style.display = "none";
+        document.getElementById("next-step-btn").style.display = "none";
         
         this.playBeep(600, 0.3);
       }
@@ -1252,6 +1425,7 @@
       pauseDevelopment() {
         this.clearTimers();
         this.isPaused = true;
+        this.timerPauseTime = Date.now();
         document.getElementById("pause-btn").style.display = "none";
         document.getElementById("resume-btn").style.display = "";
         document.getElementById("countdown").classList.add("paused");
@@ -1260,13 +1434,39 @@
       }
       
       resumeDevelopment() {
+        if (this.isPaused && !this.stepComplete) {
+          this.timerPausedDuration += Date.now() - this.timerPauseTime;
+        }
+        
         this.isPaused = false;
         document.getElementById("resume-btn").style.display = "none";
         document.getElementById("pause-btn").style.display = "";
         document.getElementById("countdown").classList.remove("paused");
-        this.startStep(this.currentStep);
+        
+        if (this.stepComplete) {
+          // If step was complete, show next step button
+          document.getElementById("next-step-btn").style.display = "";
+        } else {
+          // Otherwise resume the current step timer
+          this.startTimer(this.currentStep);
+        }
         
         this.playBeep(600, 0.2);
+      }
+      
+      nextStep() {
+        this.stepComplete = false;
+        this.timerPausedDuration = 0;
+        this.currentStep++;
+        
+        document.getElementById("next-step-btn").style.display = "none";
+        document.getElementById("pause-btn").style.display = "";
+        
+        if (this.currentStep < this.developmentPlan.length) {
+          this.startStep(this.currentStep);
+        } else {
+          this.developmentComplete();
+        }
       }
       
       startStep(stepIndex) {
@@ -1275,65 +1475,93 @@
           return;
         }
         
-        document.getElementById("current-step-name").innerText = this.developmentPlan[stepIndex].name;
-        this.remainingTime = this.developmentPlan[stepIndex].duration;
+        const currentStep = this.developmentPlan[stepIndex];
+        document.getElementById("current-step-name").innerText = currentStep.name;
+        this.remainingTime = currentStep.duration;
         document.getElementById("countdown").innerText = this.formatTime(this.remainingTime);
         document.getElementById("countdown").classList.remove("paused");
         
         const stepElements = document.querySelectorAll(".step-display");
         stepElements.forEach((el, i) => {
           el.classList.toggle("current-step", i === stepIndex);
+          el.classList.toggle("step-complete", i < stepIndex);
         });
         
-        this.agitationPattern = this.developmentPlan[stepIndex].agitationPattern || [];
+        this.agitationPattern = currentStep.agitationPattern || [];
         this.currentAgitationIndex = 0;
         
-        // Use performance-based timing for accuracy with fallback
-        const startTime = this.getCurrentTime();
-        let expected = startTime + (this.developmentPlan[stepIndex].duration * 1000);
+        // Start the timer
+        this.startTimer(stepIndex);
+      }
+      
+      startTimer(stepIndex) {
+        const currentStep = this.developmentPlan[stepIndex];
+        this.timerStartTime = Date.now() - this.timerPausedDuration;
+        this.stepComplete = false;
         
         const timerTick = () => {
-          if (this.isPaused) return;
+          if (this.isPaused || this.stepComplete) return;
           
-          const now = this.getCurrentTime();
-          const drift = now - expected;
+          const now = Date.now();
+          const elapsed = Math.floor((now - this.timerStartTime) / 1000);
+          this.remainingTime = Math.max(0, currentStep.duration - elapsed);
           
-          if (drift > 1000) {
-            // Handle significant drift
-            expected = now;
-          }
-          
-          this.remainingTime = Math.max(0, Math.ceil((expected - now) / 1000));
           document.getElementById("countdown").innerText = this.formatTime(this.remainingTime);
           
           // Handle agitation
           if (this.agitationPattern.length > 0) {
-            const elapsed = this.developmentPlan[stepIndex].duration - this.remainingTime;
-            if (this.currentAgitationIndex < this.agitationPattern.length && elapsed >= this.agitationPattern[this.currentAgitationIndex]) {
+            if (this.currentAgitationIndex < this.agitationPattern.length && 
+                elapsed >= this.agitationPattern[this.currentAgitationIndex]) {
               this.triggerAgitation();
               this.currentAgitationIndex++;
             }
           }
           
           if (this.remainingTime > 0) {
-            this.timerInterval = setTimeout(timerTick, Math.max(0, 1000 - drift));
-            expected += 1000;
+            this.timerInterval = setTimeout(timerTick, 1000);
           } else {
-            this.stepComplete();
+            this.stepFinished();
           }
         };
         
         this.timerInterval = setTimeout(timerTick, 1000);
       }
       
-      getCurrentTime() {
-        // Use performance.now() if available, otherwise fall back to Date.now()
-        return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      stepFinished() {
+        this.clearTimers();
+        this.stepComplete = true;
+        
+        // Mark current step as complete
+        const stepElements = document.querySelectorAll(".step-display");
+        if (this.currentStep < stepElements.length) {
+          stepElements[this.currentStep].classList.add("step-complete");
+          stepElements[this.currentStep].classList.remove("current-step");
+        }
+        
+        document.getElementById("current-step-name").innerText = this.developmentPlan[this.currentStep].name + " - COMPLETE!";
+        document.getElementById("countdown").innerText = "00:00";
+        document.getElementById("agitation-alert").classList.add("hidden");
+        
+        // Show next step prompt
+        if (this.currentStep < this.developmentPlan.length - 1) {
+          const nextStepName = this.developmentPlan[this.currentStep + 1].name;
+          document.getElementById("current-step-name").innerText += ` Ready for ${nextStepName}`;
+        }
+        
+        // Show next step button and hide pause button
+        document.getElementById("pause-btn").style.display = "none";
+        document.getElementById("resume-btn").style.display = "none";
+        document.getElementById("next-step-btn").style.display = "";
+        
+        // Play completion sound
+        this.playBeep(800, 0.3);
+        
+        this.showNotification(`Step ${this.currentStep + 1} complete! Ready for next step.`, "success");
       }
       
       triggerAgitation() {
         const alertElement = document.getElementById("agitation-alert");
-        alertElement.textContent = "AGITATE NOW! " + this.developmentPlan[this.currentStep].instructions;
+        alertElement.textContent = "AGITATE NOW!";
         alertElement.classList.remove("hidden");
         
         // Play agitation alert sound
@@ -1344,25 +1572,6 @@
         }, 8000);
       }
       
-      stepComplete() {
-        this.clearTimers();
-        this.currentStep++;
-        
-        if (this.currentStep < this.developmentPlan.length) {
-          // Play step completion sound
-          this.playBeep(800, 0.3);
-          
-          // Auto-advance to next step after a short delay
-          setTimeout(() => {
-            if (!this.isPaused) {
-              this.startStep(this.currentStep);
-            }
-          }, 1000);
-        } else {
-          this.developmentComplete();
-        }
-      }
-      
       developmentComplete() {
         document.getElementById("current-step-name").innerText = "Development Complete!";
         document.getElementById("countdown").innerText = "-";
@@ -1371,6 +1580,18 @@
         document.getElementById("start-btn").style.display = "";
         document.getElementById("pause-btn").style.display = "none";
         document.getElementById("resume-btn").style.display = "none";
+        document.getElementById("next-step-btn").style.display = "none";
+        
+        // Mark all steps as complete
+        const stepElements = document.querySelectorAll(".step-display");
+        stepElements.forEach(el => {
+          el.classList.add("step-complete");
+          el.classList.remove("current-step");
+        });
+        
+        // Reset timer tracking
+        this.timerPausedDuration = 0;
+        this.stepComplete = false;
         
         // Play completion sound
         this.playBeep(600, 0.2);
@@ -1404,11 +1625,14 @@
           this.currentStep = 0;
           this.developmentPlan = [];
           this.isPaused = false;
+          this.stepComplete = false;
+          this.timerPausedDuration = 0;
           
           document.getElementById("start-btn").textContent = "Start Development";
           document.getElementById("start-btn").style.display = "";
           document.getElementById("pause-btn").style.display = "none";
           document.getElementById("resume-btn").style.display = "none";
+          document.getElementById("next-step-btn").style.display = "none";
           
           this.showNotification('Calculator reset', 'info');
         }
@@ -1429,13 +1653,37 @@
         const lowerInstructions = instructions.toLowerCase();
         
         // Parse different agitation patterns
-        if (lowerInstructions.includes('continuous')) {
+        if (lowerInstructions.includes('continuous first') && lowerInstructions.includes('then')) {
+          // Parse patterns like "continuous first 30s, then 4 inversions every 60s"
+          const firstMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
+          const thenMatch = instructions.match(/then.*?(\d+)\s*(seconds|s|sec)/i);
+          
+          if (firstMatch && thenMatch) {
+            const firstInterval = parseInt(firstMatch[1]);
+            const thenInterval = parseInt(thenMatch[1]);
+            
+            // Add continuous agitation for first period (every 10 seconds)
+            for (let t = 10; t <= firstInterval && t < totalTime; t += 10) {
+              pattern.push(t);
+            }
+            
+            // Add interval agitation for remaining time
+            for (let t = firstInterval + thenInterval; t < totalTime; t += thenInterval) {
+              pattern.push(t);
+            }
+          } else {
+            // Default pattern if parsing fails
+            for (let t = 30; t < totalTime; t += 30) {
+              pattern.push(t);
+            }
+          }
+        } else if (lowerInstructions.includes('continuous')) {
           // For continuous agitation, agitate every 10 seconds
           for (let t = 10; t < totalTime; t += 10) {
             pattern.push(t);
           }
         } else if (lowerInstructions.includes('every') || lowerInstructions.includes('inversions')) {
-          // Parse interval-based agitation like "2 inversions every 30 seconds"
+          // Parse interval-based agitation like "4 inversions every 60 seconds"
           const intervalMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
           if (intervalMatch) {
             const interval = parseInt(intervalMatch[1]);
@@ -1444,30 +1692,6 @@
             }
           } else {
             // Default to 30 seconds if no interval found
-            for (let t = 30; t < totalTime; t += 30) {
-              pattern.push(t);
-            }
-          }
-        } else if (lowerInstructions.includes('first') && lowerInstructions.includes('then')) {
-          // Parse patterns like "continuous first 30s, then 2 inversions every 30s"
-          const firstMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
-          const thenMatch = instructions.match(/then.*?(\d+)\s*(seconds|s|sec)/i);
-          
-          if (firstMatch && thenMatch) {
-            const firstInterval = parseInt(firstMatch[1]);
-            const thenInterval = parseInt(thenMatch[1]);
-            
-            // Add continuous agitation for first period
-            for (let t = 10; t < firstInterval && t < totalTime; t += 10) {
-              pattern.push(t);
-            }
-            
-            // Add interval agitation for remaining time
-            for (let t = firstInterval; t < totalTime; t += thenInterval) {
-              pattern.push(t);
-            }
-          } else {
-            // Default pattern if parsing fails
             for (let t = 30; t < totalTime; t += 30) {
               pattern.push(t);
             }
