@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Film Development Assistant</title>
+  <style>
+    :root {
+      --primary: #e74c3c;
+      --primary-dark: #c0392b;
+      --primary-light: rgba(231, 76, 60, 0.1);
+      --text-light: #333;
+      --text-dark: #eee;
+      --bg-light: #f8f9fa;
+      --bg-dark: #121212;
+      --card-light: #fff;
+      --card-dark: #1e1e1e;
+      --input-light: #fff;
+      --input-dark: #2a2a2a;
+      --border-light: #ddd;
+      --border-dark: #444;
+      --warning: #e67e22;
+      --error: #e74c3c;
+      --success: #27ae60;
+      --info: #3498db;
+      --transition-speed: 0.3s;
+      --border-radius: 8px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+      --shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    * {
+      box-sizing: border-box;
+      transition: background-color var(--transition-speed) ease, 
+                  color var(--transition-speed) ease, 
+                  border-color var(--transition-speed) ease,
+                  opacity var(--transition-speed) ease;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 1.5rem;
+      min-height: 100vh;
+      background: var(--bg-light);
+      color: var(--text-light);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      line-height: 1.5;
+    }
+    
+    .container {
+      background: var(--card-light);
+      padding: 2rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    
+    h1 {
+      color: var(--primary);
+      margin: 0 0 1.25rem 0;
+      font-weight: 600;
+      font-size: 1.75rem;
+      text-align: center;
+    }
+    
+    h2 {
+      color: var(--primary);
+      font-weight: 500;
+      font-size: 1.15rem;
+      margin: 1.75rem 0 0.75rem 0;
+    }
+    
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    select, input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-light);
+      font-size: 0.95rem;
+      background: var(--input-light);
+      color: var(--text-light);
+    }
+    
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--border-radius);
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+      min-width: 120px;
+      transition: transform 0.1s ease, box-shadow 0.2s ease, background-color var(--transition-speed) ease;
+    }
+    
+    button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .primary-btn:hover:not(:disabled) {
+      background: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+    }
+    
+    .secondary-btn {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .secondary-btn:hover:not(:disabled) {
+      background: var(--primary-light);
+    }
+    
+    .reset-btn {
+      background: transparent;
+      color: #666;
+      border: 1px solid #ccc;
+    }
+    
+    .reset-btn:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .timer-display {
+      text-align: center;
+      margin: 1.5rem 0 0 0;
+      background: var(--primary-light);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .timer {
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin: 0.25rem 0;
+      color: var(--primary);
+    }
+    
+    .timer-label {
+      font-size: 0.95rem;
+      color: inherit;
+      opacity: 0.8;
+    }
+    
+    .dark-mode-toggle {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+    }
+    
+    .info-text {
+      font-size: 0.85rem;
+      color: inherit;
+      opacity: 0.8;
+      margin: -0.25rem 0 0.75rem 0;
+      line-height: 1.4;
+    }
+    
+    .error-text {
+      font-size: 0.85rem;
+      color: var(--error);
+      margin: -0.25rem 0 0.75rem 0;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+    
+    .success-text {
+      font-size: 0.85rem;
+      color: var(--success);
+      margin: -0.25rem 0 0.75rem 0;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+    
+    .step-display {
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .step-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+    
+    .step-duration {
+      font-weight: 500;
+    }
+    
+    .step-instructions {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      opacity: 0.9;
+    }
+    
+    .current-step {
+      background: rgba(231, 76, 60, 0.15);
+      border-left: 4px solid var(--primary-dark);
+    }
+    
+    .paused {
+      color: var(--warning);
+    }
+    
+    .agitation-alert {
+      animation: pulse 1s infinite;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    
+    .dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    
+    .dark-mode .container {
+      background: var(--card-dark);
+      box-shadow: var(--shadow-dark);
+    }
+    
+    .dark-mode select,
+    .dark-mode input,
+    .dark-mode textarea {
+      background: var(--input-dark);
+      color: var(--text-dark);
+      border: 1px solid var(--border-dark);
+    }
+    
+    .dark-mode .secondary-btn {
+      border-color: var(--border-dark);
+    }
+    
+    .dark-mode .info-text {
+      opacity: 0.7;
+    }
+    
+    .dark-mode .step-display {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .dark-mode .current-step {
+      background: rgba(231, 76, 60, 0.2);
+    }
+    
+    .dark-mode .timer-display {
+      background: rgba(231, 76, 60, 0.1);
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .tab-container {
+      display: flex;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-light);
+      overflow-x: auto;
+    }
+    
+    .tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all var(--transition-speed) ease;
+      white-space: nowrap;
+    }
+    
+    .tab.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+      font-weight: 500;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .combination-item {
+      padding: 1rem;
+      margin: 0.5rem 0;
+      border: 1px solid var(--border-light);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all var(--transition-speed) ease;
+    }
+    
+    .combination-item:hover {
+      background: var(--primary-light);
+    }
+    
+    .combination-item.active {
+      background: rgba(231, 76, 60, 0.1);
+      border-color: var(--primary);
+    }
+    
+    .combination-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    
+    .combination-details {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: var(--border-radius);
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+      max-width: 300px;
+    }
+    
+    .notification.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      background: var(--success);
+    }
+    
+    .notification.error {
+      background: var(--error);
+    }
+    
+    .notification.info {
+      background: var(--info);
+    }
+    
+    .import-export {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-light);
+    }
+    
+    .import-export textarea {
+      min-height: 120px;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .container {
+        padding: 1.25rem;
+        max-width: 100%;
+      }
+      
+      .button-group {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .dark-mode-toggle {
+        position: static;
+        margin: 0 0 1rem 0;
+        width: 100%;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      
+      h2 {
+        font-size: 1.1rem;
+      }
+      
+      .timer {
+        font-size: 2rem;
+      }
+      
+      .tab {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dark-mode-toggle">
+      <button class="secondary-btn" id="dark-mode-toggle">Toggle Dark Mode</button>
+    </div>
+    
+    <h1>Film Development Assistant</h1>
+    
+    <div class="tab-container">
+      <div class="tab active" data-tab="use-tab">Use Combination</div>
+      <div class="tab" data-tab="create-tab">Create/Edit Combination</div>
+      <div class="tab" data-tab="manage-tab">Manage Combinations</div>
+    </div>
+    
+    <!-- Use Combination Tab -->
+    <div id="use-tab" class="tab-content active">
+      <div class="input-group">
+        <label for="saved-combination">Select Saved Combination</label>
+        <select id="saved-combination">
+          <option value="">-- Select a saved combination --</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label for="temperature">Temperature (°C)</label>
+        <input type="number" id="temperature" min="10" max="40" step="0.5" value="20" />
+        <div class="info-text" id="temp-adjustment-info"></div>
+      </div>
+      
+      <div class="timer-display">
+        <div class="timer-label">Current Step</div>
+        <div id="current-step-name" class="timer">-</div>
+        <div class="timer-label">Time Remaining</div>
+        <div id="countdown" class="timer">-</div>
+        <div id="agitation-alert" class="timer-label agitation-alert hidden">AGITATE NOW!</div>
+      </div>
+      
+      <div class="button-group">
+        <button class="primary-btn" id="start-btn">Start Development</button>
+        <button class="secondary-btn" id="pause-btn" style="display:none;">Pause</button>
+        <button class="secondary-btn" id="resume-btn" style="display:none;">Resume</button>
+        <button class="reset-btn" id="reset-btn">Reset</button>
+      </div>
+      
+      <div id="development-steps">
+        <!-- Steps will be inserted here by JavaScript -->
+      </div>
+    </div>
+    
+    <!-- Create/Edit Combination Tab -->
+    <div id="create-tab" class="tab-content">
+      <div class="input-group">
+        <label for="combination-name">Combination Name</label>
+        <input type="text" id="combination-name" placeholder="e.g., HP5+ with HC-110" />
+      </div>
+      
+      <div class="input-group">
+        <label for="film-name">Film Name</label>
+        <input type="text" id="film-name" placeholder="e.g., Ilford HP5+ 400" />
+      </div>
+      
+      <div class="input-group">
+        <label for="developer-name">Developer Name</label>
+        <input type="text" id="developer-name" placeholder="e.g., HC-110" />
+      </div>
+      
+      <div class="input-group">
+        <label for="dilution-ratio">Dilution Ratio</label>
+        <input type="text" id="dilution-ratio" placeholder="e.g., 1+31" />
+      </div>
+      
+      <div class="input-group">
+        <label for="base-temperature">Base Temperature (°C)</label>
+        <input type="number" id="base-temperature" min="10" max="40" step="0.5" value="20" />
+      </div>
+      
+      <div class="input-group">
+        <label for="base-time">Base Development Time (minutes)</label>
+        <input type="number" id="base-time" min="1" step="0.5" placeholder="e.g., 5 for 5 minutes" />
+      </div>
+      
+      <div class="input-group">
+        <label for="agitation-instructions">Agitation Instructions</label>
+        <textarea id="agitation-instructions" placeholder="e.g., Continuous first 30s, then 2 inversions every 30s"></textarea>
+      </div>
+      
+      <div class="button-group">
+        <button class="primary-btn" id="save-combination-btn">Save Combination</button>
+        <button class="secondary-btn" id="clear-form-btn">Clear Form</button>
+        <button class="reset-btn" id="cancel-edit-btn" style="display:none;">Cancel Edit</button>
+      </div>
+      
+      <div class="info-text" id="edit-info" style="display:none;">
+        You are currently editing an existing combination. Click "Save Combination" to update it or "Cancel Edit" to discard changes.
+      </div>
+    </div>
+    
+    <!-- Manage Combinations Tab -->
+    <div id="manage-tab" class="tab-content">
+      <div id="combinations-list">
+        <!-- Saved combinations will be listed here -->
+      </div>
+      
+      <div class="import-export">
+        <h2>Import/Export</h2>
+        <div class="info-text">
+          Export your combinations to save them or transfer to another device. Import previously exported combinations.
+        </div>
+        
+        <div class="input-group">
+          <label for="export-data">Export Data (JSON)</label>
+          <textarea id="export-data" readonly></textarea>
+        </div>
+        
+        <div class="input-group">
+          <label for="import-data">Import Data (JSON)</label>
+          <textarea id="import-data" placeholder="Paste your exported JSON data here"></textarea>
+        </div>
+        
+        <div class="button-group">
+          <button class="secondary-btn" id="export-btn">Export All Combinations</button>
+          <button class="secondary-btn" id="import-btn">Import Combinations</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="notification" class="notification"></div>
+  
+  <script>
+    // Main application class
+    class FilmDevelopmentAssistant {
+      constructor() {
+        this.userCombinations = [];
+        this.currentCombination = null;
+        this.editingCombinationId = null;
+        this.currentStep = 0;
+        this.timerInterval = null;
+        this.remainingTime = 0;
+        this.developmentPlan = [];
+        this.isPaused = false;
+        this.nextAgitationTime = 0;
+        this.agitationInterval = null;
+        this.agitationPattern = [];
+        this.currentAgitationIndex = 0;
+        this.audioContext = null;
+        this.soundEnabled = true;
+        this.settings = {
+          darkMode: false
+        };
+        
+        this.init();
+      }
+      
+      init() {
+        this.loadSettings();
+        this.loadCombinations();
+        this.setupEventListeners();
+        this.updateCombinationDropdown();
+        this.renderCombinationsList();
+        this.applySettings();
+        this.updateExportData();
+      }
+      
+      setupEventListeners() {
+        // Tab navigation
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
+        });
+        
+        // Buttons
+        document.getElementById('save-combination-btn').addEventListener('click', () => this.saveCombination());
+        document.getElementById('clear-form-btn').addEventListener('click', () => this.clearCombinationForm());
+        document.getElementById('cancel-edit-btn').addEventListener('click', () => this.cancelEdit());
+        document.getElementById('start-btn').addEventListener('click', () => this.startDevelopment());
+        document.getElementById('pause-btn').addEventListener('click', () => this.pauseDevelopment());
+        document.getElementById('resume-btn').addEventListener('click', () => this.resumeDevelopment());
+        document.getElementById('reset-btn').addEventListener('click', () => this.resetCalculator());
+        document.getElementById('dark-mode-toggle').addEventListener('click', () => this.toggleDarkMode());
+        document.getElementById('export-btn').addEventListener('click', () => this.exportData());
+        document.getElementById('import-btn').addEventListener('click', () => this.importData());
+        
+        // Combination selection
+        document.getElementById('saved-combination').addEventListener('change', (e) => {
+          if (e.target.value) {
+            this.useCombination(e.target.value);
+          }
+        });
+        
+        // Temperature change
+        document.getElementById('temperature').addEventListener('change', () => {
+          this.updateTemperatureAdjustment();
+        });
+        
+        // Handle beforeunload for cleanup
+        window.addEventListener('beforeunload', () => this.cleanup());
+      }
+      
+      switchTab(tabId) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+        
+        // Special handling for certain tabs
+        if (tabId === 'manage-tab') {
+          this.renderCombinationsList();
+          this.updateExportData();
+        } else if (tabId === 'create-tab') {
+          // If we're switching to create tab and not editing, clear the form
+          if (!this.editingCombinationId) {
+            this.clearCombinationForm();
+          }
+        }
+      }
+      
+      // Settings management
+      loadSettings() {
+        const saved = localStorage.getItem('filmDevelopmentSettings');
+        if (saved) {
+          try {
+            this.settings = { ...this.settings, ...JSON.parse(saved) };
+          } catch (e) {
+            console.error('Error loading settings:', e);
+          }
+        }
+      }
+      
+      saveSettings() {
+        this.settings.darkMode = document.body.classList.contains('dark-mode');
+        
+        try {
+          localStorage.setItem('filmDevelopmentSettings', JSON.stringify(this.settings));
+        } catch (e) {
+          console.error('Error saving settings:', e);
+          this.showNotification('Error saving settings', 'error');
+        }
+      }
+      
+      applySettings() {
+        // Apply dark mode
+        if (this.settings.darkMode) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      }
+      
+      toggleDarkMode() {
+        this.settings.darkMode = !this.settings.darkMode;
+        document.body.classList.toggle('dark-mode', this.settings.darkMode);
+        this.saveSettings();
+      }
+      
+      // Combination management
+      loadCombinations() {
+        const saved = localStorage.getItem('filmDevelopmentCombinations');
+        if (saved) {
+          try {
+            this.userCombinations = JSON.parse(saved);
+          } catch (e) {
+            console.error('Error loading combinations:', e);
+            this.userCombinations = [];
+            this.showNotification('Error loading saved combinations', 'error');
+          }
+        }
+      }
+      
+      saveCombinations() {
+        try {
+          localStorage.setItem('filmDevelopmentCombinations', JSON.stringify(this.userCombinations));
+        } catch (e) {
+          console.error('Error saving combinations:', e);
+          this.showNotification('Error saving combinations', 'error');
+        }
+      }
+      
+      updateCombinationDropdown() {
+        const dropdown = document.getElementById('saved-combination');
+        dropdown.innerHTML = '<option value="">-- Select a saved combination --</option>';
+        
+        this.userCombinations.forEach(combo => {
+          const option = document.createElement('option');
+          option.value = combo.id;
+          option.textContent = combo.name;
+          dropdown.appendChild(option);
+        });
+      }
+      
+      renderCombinationsList() {
+        const container = document.getElementById('combinations-list');
+        container.innerHTML = '';
+        
+        if (this.userCombinations.length === 0) {
+          container.innerHTML = '<p>No combinations saved yet.</p>';
+          return;
+        }
+        
+        this.userCombinations.forEach(combo => {
+          const div = document.createElement('div');
+          div.className = 'combination-item';
+          div.innerHTML = `
+            <div class="combination-name">${this.escapeHtml(combo.name)}</div>
+            <div class="combination-details">${this.escapeHtml(combo.filmName)} with ${this.escapeHtml(combo.developerName)} ${this.escapeHtml(combo.dilutionRatio)}</div>
+            <div class="combination-details">${combo.baseTime} min at ${combo.baseTemperature}°C</div>
+            <div class="button-group" style="margin-top: 0.5rem;">
+              <button class="secondary-btn" data-action="edit" data-id="${combo.id}">Edit</button>
+              <button class="secondary-btn" data-action="delete" data-id="${combo.id}">Delete</button>
+              <button class="primary-btn" data-action="use" data-id="${combo.id}">Use</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+        
+        // Add event listeners to the buttons
+        container.querySelectorAll('button').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            const id = e.target.dataset.id;
+            
+            if (action === 'edit') {
+              this.editCombination(id);
+            } else if (action === 'delete') {
+              this.deleteCombination(id);
+            } else if (action === 'use') {
+              this.useCombination(id);
+            }
+          });
+        });
+      }
+      
+      useCombination(comboId) {
+        const combo = this.userCombinations.find(c => c.id === comboId);
+        if (combo) {
+          this.currentCombination = combo;
+          document.getElementById('saved-combination').value = comboId;
+          document.getElementById('temperature').value = combo.baseTemperature;
+          
+          // Create development plan
+          this.developmentPlan = this.createDevelopmentPlan(combo);
+          this.displayDevelopmentSteps();
+          this.updateTemperatureAdjustment();
+          
+          this.switchTab('use-tab');
+          this.showNotification(`Loaded combination: ${combo.name}`, 'success');
+        } else {
+          this.showNotification('Combination not found', 'error');
+        }
+      }
+      
+      editCombination(comboId) {
+        const combo = this.userCombinations.find(c => c.id === comboId);
+        if (combo) {
+          this.editingCombinationId = comboId;
+          
+          // Fill the form with the combination data
+          document.getElementById('combination-name').value = combo.name;
+          document.getElementById('film-name').value = combo.filmName;
+          document.getElementById('developer-name').value = combo.developerName;
+          document.getElementById('dilution-ratio').value = combo.dilutionRatio;
+          document.getElementById('base-temperature').value = combo.baseTemperature;
+          document.getElementById('base-time').value = combo.baseTime;
+          document.getElementById('agitation-instructions').value = combo.agitationInstructions;
+          
+          // Show edit mode UI
+          document.getElementById('cancel-edit-btn').style.display = '';
+          document.getElementById('edit-info').style.display = 'block';
+          
+          this.switchTab('create-tab');
+          this.showNotification(`Editing combination: ${combo.name}`, 'info');
+        } else {
+          this.showNotification('Combination not found', 'error');
+        }
+      }
+      
+      cancelEdit() {
+        this.editingCombinationId = null;
+        document.getElementById('cancel-edit-btn').style.display = 'none';
+        document.getElementById('edit-info').style.display = 'none';
+        this.clearCombinationForm();
+        this.showNotification('Edit cancelled', 'info');
+      }
+      
+      deleteCombination(comboId) {
+        if (confirm('Are you sure you want to delete this combination?')) {
+          this.userCombinations = this.userCombinations.filter(c => c.id !== comboId);
+          this.saveCombinations();
+          this.updateCombinationDropdown();
+          this.renderCombinationsList();
+          this.showNotification('Combination deleted', 'success');
+        }
+      }
+      
+      clearCombinationForm() {
+        document.getElementById('combination-name').value = '';
+        document.getElementById('film-name').value = '';
+        document.getElementById('developer-name').value = '';
+        document.getElementById('dilution-ratio').value = '';
+        document.getElementById('base-temperature').value = 20;
+        document.getElementById('base-time').value = '';
+        document.getElementById('agitation-instructions').value = '';
+        
+        // Hide edit mode UI
+        document.getElementById('cancel-edit-btn').style.display = 'none';
+        document.getElementById('edit-info').style.display = 'none';
+        this.editingCombinationId = null;
+      }
+      
+      saveCombination() {
+        const name = document.getElementById('combination-name').value.trim();
+        const filmName = document.getElementById('film-name').value.trim();
+        const developerName = document.getElementById('developer-name').value.trim();
+        const dilutionRatio = document.getElementById('dilution-ratio').value.trim();
+        const baseTemperature = parseFloat(document.getElementById('base-temperature').value);
+        const baseTime = parseFloat(document.getElementById('base-time').value);
+        const agitationInstructions = document.getElementById('agitation-instructions').value.trim();
+        
+        // Validation
+        if (!name) {
+          this.showNotification('Please enter a combination name', 'error');
+          return;
+        }
+        
+        if (!filmName) {
+          this.showNotification('Please enter a film name', 'error');
+          return;
+        }
+        
+        if (!developerName) {
+          this.showNotification('Please enter a developer name', 'error');
+          return;
+        }
+        
+        if (!dilutionRatio) {
+          this.showNotification('Please enter a dilution ratio', 'error');
+          return;
+        }
+        
+        if (isNaN(baseTemperature) || baseTemperature < 10 || baseTemperature > 40) {
+          this.showNotification('Please enter a valid temperature between 10°C and 40°C', 'error');
+          return;
+        }
+        
+        if (isNaN(baseTime) || baseTime <= 0) {
+          this.showNotification('Please enter a valid development time', 'error');
+          return;
+        }
+        
+        const comboData = {
+          id: this.editingCombinationId || this.generateId(),
+          name,
+          filmName,
+          developerName,
+          dilutionRatio,
+          baseTemperature,
+          baseTime,
+          agitationInstructions,
+          created: new Date().toISOString(),
+          updated: new Date().toISOString()
+        };
+        
+        if (this.editingCombinationId) {
+          // Update existing combination
+          const index = this.userCombinations.findIndex(c => c.id === this.editingCombinationId);
+          if (index !== -1) {
+            this.userCombinations[index] = comboData;
+          }
+          this.showNotification(`Combination "${name}" updated successfully!`, 'success');
+        } else {
+          // Add new combination
+          this.userCombinations.push(comboData);
+          this.showNotification('Combination saved successfully!', 'success');
+        }
+        
+        this.saveCombinations();
+        this.updateCombinationDropdown();
+        this.renderCombinationsList();
+        
+        // Clear the form and exit edit mode
+        this.clearCombinationForm();
+        
+        // Switch to manage tab to see the updated list
+        this.switchTab('manage-tab');
+      }
+      
+      createDevelopmentPlan(combo) {
+        // Get current temperature
+        const currentTemp = parseFloat(document.getElementById('temperature').value) || combo.baseTemperature;
+        
+        // Calculate adjusted development time based on temperature
+        const adjustedDevTime = this.calculateAdjustedTime(combo.baseTime, combo.baseTemperature, currentTemp);
+        
+        // Convert minutes to seconds for timer
+        const devTimeSeconds = adjustedDevTime * 60;
+        
+        // Parse agitation instructions
+        const agitationPattern = this.parseAgitationInstructions(combo.agitationInstructions, devTimeSeconds);
+        
+        return [
+          { 
+            name: "Pre-soak", 
+            duration: 60, 
+            instructions: "Soak film in water at same temperature as developer",
+            agitationPattern: []
+          },
+          { 
+            name: "Developer", 
+            duration: devTimeSeconds, 
+            instructions: combo.agitationInstructions,
+            agitationPattern: agitationPattern
+          },
+          { 
+            name: "Stop Bath", 
+            duration: 30, 
+            instructions: "Use stop bath or water rinse with continuous agitation",
+            agitationPattern: []
+          },
+          { 
+            name: "Fixer", 
+            duration: 300, 
+            instructions: "Use rapid fixer with appropriate agitation",
+            agitationPattern: []
+          },
+          { 
+            name: "Wash", 
+            duration: 600, 
+            instructions: "Rinse with water, change water periodically",
+            agitationPattern: []
+          },
+          { 
+            name: "Photo-Flo", 
+            duration: 60, 
+            instructions: "Use wetting agent to prevent water spots",
+            agitationPattern: []
+          }
+        ];
+      }
+      
+      calculateAdjustedTime(baseTime, baseTemp, currentTemp) {
+        // Simple temperature adjustment using the rule of thumb:
+        // For every 1°C above 20°C, decrease time by 10-15%
+        // For every 1°C below 20°C, increase time by 10-15%
+        // This is a simplified version - real film development uses more complex formulas
+        
+        if (baseTemp === currentTemp) return baseTime;
+        
+        const tempDiff = currentTemp - baseTemp;
+        const adjustmentFactor = 0.1; // 10% adjustment per degree
+        
+        return baseTime * (1 + (tempDiff * adjustmentFactor));
+      }
+      
+      updateTemperatureAdjustment() {
+        if (!this.currentCombination) return;
+        
+        const currentTemp = parseFloat(document.getElementById('temperature').value);
+        const baseTemp = this.currentCombination.baseTemperature;
+        const baseTime = this.currentCombination.baseTime;
+        
+        if (currentTemp !== baseTemp) {
+          const adjustedTime = this.calculateAdjustedTime(baseTime, baseTemp, currentTemp);
+          const adjustmentText = `Adjusted development time: ${adjustedTime.toFixed(1)} min (from ${baseTime} min at ${baseTemp}°C)`;
+          document.getElementById('temp-adjustment-info').textContent = adjustmentText;
+        } else {
+          document.getElementById('temp-adjustment-info').textContent = '';
+        }
+      }
+      
+      // Import/Export functionality
+      exportData() {
+        const data = {
+          combinations: this.userCombinations,
+          exportDate: new Date().toISOString(),
+          version: '1.0'
+        };
+        
+        const jsonString = JSON.stringify(data, null, 2);
+        
+        // Try to copy to clipboard first
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(jsonString).then(() => {
+            this.showNotification('Data copied to clipboard!', 'success');
+          }).catch(err => {
+            console.error('Failed to copy: ', err);
+            this.fallbackExport(jsonString);
+          });
+        } else {
+          this.fallbackExport(jsonString);
+        }
+      }
+      
+      fallbackExport(jsonString) {
+        document.getElementById('export-data').value = jsonString;
+        document.getElementById('export-data').select();
+        document.execCommand('copy');
+        this.showNotification('Export data displayed in text area and copied to clipboard', 'info');
+      }
+      
+      importData() {
+        const importData = document.getElementById('import-data').value.trim();
+        
+        if (!importData) {
+          this.showNotification('Please enter JSON data to import', 'error');
+          return;
+        }
+        
+        try {
+          const data = JSON.parse(importData);
+          
+          if (!data.combinations || !Array.isArray(data.combinations)) {
+            throw new Error('Invalid data format: missing combinations array');
+          }
+          
+          if (confirm(`This will import ${data.combinations.length} combination(s). Continue?`)) {
+            // Merge with existing combinations (avoid duplicates by ID)
+            data.combinations.forEach(newCombo => {
+              const existingIndex = this.userCombinations.findIndex(c => c.id === newCombo.id);
+              if (existingIndex !== -1) {
+                // Update existing
+                this.userCombinations[existingIndex] = newCombo;
+              } else {
+                // Add new
+                this.userCombinations.push(newCombo);
+              }
+            });
+            
+            this.saveCombinations();
+            this.updateCombinationDropdown();
+            this.renderCombinationsList();
+            this.updateExportData();
+            
+            this.showNotification(`Successfully imported ${data.combinations.length} combination(s)`, 'success');
+            
+            // Clear the import field
+            document.getElementById('import-data').value = '';
+          }
+        } catch (e) {
+          this.showNotification('Invalid JSON data: ' + e.message, 'error');
+        }
+      }
+      
+      updateExportData() {
+        const data = {
+          combinations: this.userCombinations,
+          exportDate: new Date().toISOString(),
+          version: '1.0'
+        };
+        document.getElementById('export-data').value = JSON.stringify(data, null, 2);
+      }
+      
+      generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+      }
+      
+      // Timer functionality
+      startDevelopment() {
+        if (!this.currentCombination) {
+          const selectedId = document.getElementById('saved-combination').value;
+          if (!selectedId) {
+            this.showNotification('Please select a development combination first', 'error');
+            return;
+          }
+          this.useCombination(selectedId);
+        }
+        
+        if (this.developmentPlan.length === 0) {
+          this.showNotification("No development plan calculated", "error");
+          return;
+        }
+        
+        this.currentStep = 0;
+        this.isPaused = false;
+        this.startStep(this.currentStep);
+        
+        document.getElementById("start-btn").style.display = "none";
+        document.getElementById("pause-btn").style.display = "";
+        document.getElementById("resume-btn").style.display = "none";
+      }
+      
+      pauseDevelopment() {
+        this.clearTimers();
+        this.isPaused = true;
+        document.getElementById("pause-btn").style.display = "none";
+        document.getElementById("resume-btn").style.display = "";
+        document.getElementById("countdown").classList.add("paused");
+      }
+      
+      resumeDevelopment() {
+        this.isPaused = false;
+        document.getElementById("resume-btn").style.display = "none";
+        document.getElementById("pause-btn").style.display = "";
+        document.getElementById("countdown").classList.remove("paused");
+        this.startStep(this.currentStep);
+      }
+      
+      startStep(stepIndex) {
+        if (stepIndex >= this.developmentPlan.length) {
+          this.developmentComplete();
+          return;
+        }
+        
+        document.getElementById("current-step-name").innerText = this.developmentPlan[stepIndex].name;
+        this.remainingTime = this.developmentPlan[stepIndex].duration;
+        document.getElementById("countdown").innerText = this.formatTime(this.remainingTime);
+        document.getElementById("countdown").classList.remove("paused");
+        
+        const stepElements = document.querySelectorAll(".step-display");
+        stepElements.forEach((el, i) => {
+          el.classList.toggle("current-step", i === stepIndex);
+        });
+        
+        this.agitationPattern = this.developmentPlan[stepIndex].agitationPattern || [];
+        this.currentAgitationIndex = 0;
+        
+        // Use performance-based timing for accuracy with fallback
+        const startTime = this.getCurrentTime();
+        let expected = startTime + (this.developmentPlan[stepIndex].duration * 1000);
+        
+        const timerTick = () => {
+          if (this.isPaused) return;
+          
+          const now = this.getCurrentTime();
+          const drift = now - expected;
+          
+          if (drift > 1000) {
+            // Handle significant drift
+            expected = now;
+          }
+          
+          this.remainingTime = Math.max(0, Math.ceil((expected - now) / 1000));
+          document.getElementById("countdown").innerText = this.formatTime(this.remainingTime);
+          
+          // Handle agitation
+          if (this.agitationPattern.length > 0) {
+            const elapsed = this.developmentPlan[stepIndex].duration - this.remainingTime;
+            if (this.currentAgitationIndex < this.agitationPattern.length && elapsed >= this.agitationPattern[this.currentAgitationIndex]) {
+              this.triggerAgitation();
+              this.currentAgitationIndex++;
+            }
+          }
+          
+          if (this.remainingTime > 0) {
+            this.timerInterval = setTimeout(timerTick, Math.max(0, 1000 - drift));
+            expected += 1000;
+          } else {
+            this.stepComplete();
+          }
+        };
+        
+        this.timerInterval = setTimeout(timerTick, 1000);
+      }
+      
+      getCurrentTime() {
+        // Use performance.now() if available, otherwise fall back to Date.now()
+        return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      }
+      
+      triggerAgitation() {
+        const alertElement = document.getElementById("agitation-alert");
+        alertElement.textContent = "AGITATE NOW! " + this.developmentPlan[this.currentStep].instructions;
+        alertElement.classList.remove("hidden");
+        
+        setTimeout(() => {
+          alertElement.classList.add("hidden");
+        }, 8000);
+      }
+      
+      stepComplete() {
+        this.clearTimers();
+        this.currentStep++;
+        
+        if (this.currentStep < this.developmentPlan.length) {
+          // Auto-advance to next step after a short delay
+          setTimeout(() => {
+            if (!this.isPaused) {
+              this.startStep(this.currentStep);
+            }
+          }, 1000);
+        } else {
+          this.developmentComplete();
+        }
+      }
+      
+      developmentComplete() {
+        document.getElementById("current-step-name").innerText = "Development Complete!";
+        document.getElementById("countdown").innerText = "-";
+        document.getElementById("agitation-alert").classList.add("hidden");
+        document.getElementById("start-btn").textContent = "Start Development";
+        document.getElementById("start-btn").style.display = "";
+        document.getElementById("pause-btn").style.display = "none";
+        document.getElementById("resume-btn").style.display = "none";
+        this.showNotification("Development process completed!", "success");
+      }
+      
+      clearTimers() {
+        if (this.timerInterval) {
+          clearTimeout(this.timerInterval);
+          this.timerInterval = null;
+        }
+        if (this.agitationInterval) {
+          clearInterval(this.agitationInterval);
+          this.agitationInterval = null;
+        }
+      }
+      
+      resetCalculator() {
+        if (confirm('Are you sure you want to reset?')) {
+          document.getElementById("current-step-name").innerText = "-";
+          document.getElementById("countdown").innerText = "-";
+          document.getElementById("development-steps").innerHTML = "";
+          document.getElementById("agitation-alert").classList.add("hidden");
+          document.getElementById("temp-adjustment-info").textContent = "";
+          
+          this.clearTimers();
+          
+          this.currentStep = 0;
+          this.developmentPlan = [];
+          this.isPaused = false;
+          
+          document.getElementById("start-btn").textContent = "Start Development";
+          document.getElementById("start-btn").style.display = "";
+          document.getElementById("pause-btn").style.display = "none";
+          document.getElementById("resume-btn").style.display = "none";
+          
+          this.showNotification('Calculator reset', 'info');
+        }
+      }
+      
+      // Utility functions
+      parseAgitationInstructions(instructions, totalTime) {
+        const pattern = [0]; // Always agitate at start
+        
+        if (!instructions) {
+          // Default pattern if no instructions provided
+          for (let t = 30; t < totalTime; t += 30) {
+            pattern.push(t);
+          }
+          return pattern;
+        }
+        
+        const lowerInstructions = instructions.toLowerCase();
+        
+        // Parse different agitation patterns
+        if (lowerInstructions.includes('continuous')) {
+          // For continuous agitation, agitate every 10 seconds
+          for (let t = 10; t < totalTime; t += 10) {
+            pattern.push(t);
+          }
+        } else if (lowerInstructions.includes('every') || lowerInstructions.includes('inversions')) {
+          // Parse interval-based agitation like "2 inversions every 30 seconds"
+          const intervalMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
+          if (intervalMatch) {
+            const interval = parseInt(intervalMatch[1]);
+            for (let t = interval; t < totalTime; t += interval) {
+              pattern.push(t);
+            }
+          } else {
+            // Default to 30 seconds if no interval found
+            for (let t = 30; t < totalTime; t += 30) {
+              pattern.push(t);
+            }
+          }
+        } else {
+          // Default pattern if no recognized pattern
+          for (let t = 30; t < totalTime; t += 30) {
+            pattern.push(t);
+          }
+        }
+        
+        return pattern;
+      }
+      
+      displayDevelopmentSteps() {
+        const stepsContainer = document.getElementById('development-steps');
+        stepsContainer.innerHTML = '<h2>Development Steps</h2>';
+        
+        this.developmentPlan.forEach((step, i) => {
+          const stepDiv = document.createElement('div');
+          stepDiv.className = 'step-display' + (i === this.currentStep ? ' current-step' : '');
+          
+          stepDiv.innerHTML = `
+            <div class="step-title">${this.escapeHtml(step.name)}</div>
+            <div class="step-duration">${this.formatTime(step.duration)}</div>
+            <div class="step-instructions">${this.escapeHtml(step.instructions)}</div>
+          `;
+          
+          stepsContainer.appendChild(stepDiv);
+        });
+      }
+      
+      formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+      
+      escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      
+      showNotification(message, type = 'info', duration = 3000) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, duration);
+      }
+      
+      cleanup() {
+        this.clearTimers();
+      }
+    }
+
+    // Initialize the application when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      window.filmDevelopmentApp = new FilmDevelopmentAssistant();
+    });
+  </script>
+</body>
+</html>
