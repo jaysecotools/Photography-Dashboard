@@ -1219,7 +1219,7 @@
         // Add stop bath step
         developmentPlan.push({ 
           name: "Stop Bath", 
-          duration: combo.stopBathDuration || 30, 
+          duration: combo.stopBathDuration || 60, 
             instructions: "Use stop bath or water rinse with continuous agitation",
           agitationPattern: []
         });
@@ -1227,7 +1227,7 @@
         // Add fixer step
         developmentPlan.push({ 
           name: "Fixer", 
-          duration: combo.fixerDuration || 300, 
+          duration: combo.fixerDuration || 180, 
           instructions: "Use rapid fixer with appropriate agitation",
           agitationPattern: []
         });
@@ -1235,7 +1235,7 @@
         // Add wash step
         developmentPlan.push({ 
           name: "Wash", 
-          duration: combo.washDuration || 600, 
+          duration: combo.washDuration || 300, 
           instructions: "Rinse with water, change water periodically",
           agitationPattern: []
         });
