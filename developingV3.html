@@ -453,6 +453,95 @@
       margin: 1rem 0;
       border-radius: var(--border-radius);
     }
+
+    /* New styles for agitation timeline */
+    .agitation-timeline {
+      position: relative;
+      height: 24px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 12px;
+      margin: 0.75rem 0;
+      overflow: hidden;
+    }
+
+    .timeline-label {
+      font-size: 0.8rem;
+      margin-bottom: 0.25rem;
+      opacity: 0.7;
+    }
+
+    .agitation-marker {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 50%;
+      top: 4px;
+      transform: translateX(-50%);
+      cursor: help;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .agitation-marker::after {
+      content: attr(data-time);
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      background: var(--primary);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .agitation-marker:hover::after {
+      opacity: 1;
+    }
+
+    .quick-start-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .quick-start-btn {
+      padding: 1rem;
+      background: var(--primary-light);
+      border: 1px solid var(--border-light);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all var(--transition-speed) ease;
+      text-align: left;
+    }
+
+    .quick-start-btn:hover {
+      background: rgba(231, 76, 60, 0.2);
+      border-color: var(--primary);
+    }
+
+    .quick-start-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--primary);
+    }
+
+    .quick-start-details {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    .sound-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
     
     @media (max-width: 768px) {
       body {
@@ -496,6 +585,10 @@
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
       }
+
+      .quick-start-grid {
+        grid-template-columns: 1fr;
+      }
     }
     
     @media (prefers-reduced-motion: reduce) {
@@ -528,11 +621,24 @@
           <option value="">-- Select a saved combination --</option>
         </select>
       </div>
+
+      <!-- Quick Start Templates -->
+      <div class="input-group">
+        <label>Quick Start Templates</label>
+        <div class="quick-start-grid" id="quick-start-templates">
+          <!-- Templates will be populated by JavaScript -->
+        </div>
+      </div>
       
       <div class="input-group">
         <label for="temperature">Temperature (°C)</label>
         <input type="number" id="temperature" min="10" max="40" step="0.5" value="20" />
         <div class="info-text" id="temp-adjustment-info"></div>
+      </div>
+
+      <div class="sound-toggle">
+        <input type="checkbox" id="sound-enabled" checked>
+        <label for="sound-enabled">Enable sound alerts</label>
       </div>
       
       <div class="timer-display">
@@ -540,7 +646,7 @@
         <div id="current-step-name" class="timer">-</div>
         <div class="timer-label">Time Remaining</div>
         <div id="countdown" class="timer">-</div>
-        <div id="agitation-alert" class="timer-label agitation-alert hidden">AGITATE NOW!</div>
+        <div id="agitation-alert" class="timer-label agitation-alert hidden">AGITATE NOW! (8 inversions)</div>
       </div>
       
       <div class="button-group">
@@ -591,6 +697,7 @@
       <div class="input-group">
         <label for="agitation-pattern">Agitation Pattern</label>
         <select id="agitation-pattern">
+          <option value="standard-8-4">8 inversions initially, then 4 every minute</option>
           <option value="continuous-30-then-60">Continuous first 30s, then 4 inversions every 60s</option>
           <option value="continuous-30-then-30">Continuous first 30s, then 4 inversions every 30s</option>
           <option value="every-30">4 inversions every 30s</option>
@@ -601,7 +708,7 @@
       
       <div class="input-group">
         <label for="agitation-instructions">Custom Agitation Instructions</label>
-        <textarea id="agitation-instructions" placeholder="e.g., Continuous first 30s, then 4 inversions every 60s"></textarea>
+        <textarea id="agitation-instructions" placeholder="e.g., 8 inversions initially, then 4 every minute"></textarea>
         <div class="info-text" id="agitation-preview"></div>
       </div>
       
@@ -728,6 +835,7 @@
         this.setupEventListeners();
         this.updateCombinationDropdown();
         this.renderCombinationsList();
+        this.renderQuickStartTemplates();
         this.applySettings();
         this.updateExportData();
         this.initAudio();
@@ -752,6 +860,10 @@
         document.getElementById('export-btn').addEventListener('click', () => this.exportData());
         document.getElementById('import-btn').addEventListener('click', () => this.importData());
         document.getElementById('reset-all-btn').addEventListener('click', () => this.resetAllData());
+        document.getElementById('sound-enabled').addEventListener('change', (e) => {
+          this.settings.soundEnabled = e.target.checked;
+          this.saveSettings();
+        });
         
         // Combination selection
         document.getElementById('saved-combination').addEventListener('change', (e) => {
@@ -798,7 +910,7 @@
         }
       }
       
-      // Audio initialization
+      // Improved Audio System
       initAudio() {
         try {
           this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -808,24 +920,76 @@
         }
       }
       
-      playBeep(frequency = 800, duration = 0.2) {
+      playBeep(type = 'default') {
         if (!this.soundEnabled || !this.audioContext || !this.settings.soundEnabled) return;
         
         try {
+          const now = this.audioContext.currentTime;
           const oscillator = this.audioContext.createOscillator();
           const gainNode = this.audioContext.createGain();
           
           oscillator.connect(gainNode);
           gainNode.connect(this.audioContext.destination);
           
-          oscillator.frequency.value = frequency;
-          oscillator.type = 'sine';
-          
-          gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
-          
-          oscillator.start(this.audioContext.currentTime);
-          oscillator.stop(this.audioContext.currentTime + duration);
+          // Different sounds for different events
+          switch(type) {
+            case 'agitation':
+              // More urgent, higher frequency beep for agitation
+              oscillator.frequency.setValueAtTime(1200, now);
+              oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+              gainNode.gain.setValueAtTime(0.4, now);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+              oscillator.start(now);
+              oscillator.stop(now + 0.5);
+              break;
+              
+            case 'stepComplete':
+              // Pleasant completion chime
+              oscillator.frequency.setValueAtTime(800, now);
+              gainNode.gain.setValueAtTime(0.3, now);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+              oscillator.start(now);
+              oscillator.stop(now + 0.8);
+              
+              // Add a second oscillator for harmony
+              setTimeout(() => {
+                const oscillator2 = this.audioContext.createOscillator();
+                const gainNode2 = this.audioContext.createGain();
+                oscillator2.connect(gainNode2);
+                gainNode2.connect(this.audioContext.destination);
+                oscillator2.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+                gainNode2.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                gainNode2.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.6);
+                oscillator2.start(this.audioContext.currentTime);
+                oscillator2.stop(this.audioContext.currentTime + 0.6);
+              }, 200);
+              break;
+              
+            case 'developmentComplete':
+              // Celebration sequence
+              [600, 800, 1000, 1200].forEach((freq, i) => {
+                setTimeout(() => {
+                  const osc = this.audioContext.createOscillator();
+                  const gain = this.audioContext.createGain();
+                  osc.connect(gain);
+                  gain.connect(this.audioContext.destination);
+                  osc.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                  gain.gain.setValueAtTime(0.25, this.audioContext.currentTime);
+                  gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                  osc.start(this.audioContext.currentTime);
+                  osc.stop(this.audioContext.currentTime + 0.3);
+                }, i * 150);
+              });
+              break;
+              
+            default:
+              // Standard beep
+              oscillator.frequency.setValueAtTime(800, now);
+              gainNode.gain.setValueAtTime(0.3, now);
+              gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+              oscillator.start(now);
+              oscillator.stop(now + 0.2);
+          }
         } catch (e) {
           console.warn('Error playing sound:', e);
         }
@@ -841,6 +1005,7 @@
             console.error('Error loading settings:', e);
           }
         }
+        document.getElementById('sound-enabled').checked = this.settings.soundEnabled;
       }
       
       saveSettings() {
@@ -869,7 +1034,256 @@
         this.saveSettings();
       }
       
-      // Combination management
+      // Quick Start Templates
+      getQuickStartTemplates() {
+        return [
+          {
+            name: "HP5+ @ 400 - HC-110 (B)",
+            filmName: "Ilford HP5+",
+            developerName: "HC-110",
+            dilutionRatio: "1+31",
+            baseTemperature: 20,
+            baseTime: 5.5,
+            agitationPattern: "standard-8-4",
+            agitationInstructions: "8 inversions initially, then 4 every minute"
+          },
+          {
+            name: "Tri-X @ 400 - D-76",
+            filmName: "Kodak Tri-X 400",
+            developerName: "D-76",
+            dilutionRatio: "1+1",
+            baseTemperature: 20,
+            baseTime: 8.5,
+            agitationPattern: "standard-8-4",
+            agitationInstructions: "8 inversions initially, then 4 every minute"
+          },
+          {
+            name: "FP4+ @ 125 - ID-11",
+            filmName: "Ilford FP4+",
+            developerName: "ID-11",
+            dilutionRatio: "1+1",
+            baseTemperature: 20,
+            baseTime: 6.5,
+            agitationPattern: "standard-8-4",
+            agitationInstructions: "8 inversions initially, then 4 every minute"
+          },
+          {
+            name: "T-Max 400 - T-Max Dev",
+            filmName: "Kodak T-Max 400",
+            developerName: "T-Max Developer",
+            dilutionRatio: "1+4",
+            baseTemperature: 20,
+            baseTime: 6.5,
+            agitationPattern: "standard-8-4",
+            agitationInstructions: "8 inversions initially, then 4 every minute"
+          }
+        ];
+      }
+      
+      renderQuickStartTemplates() {
+        const container = document.getElementById('quick-start-templates');
+        const templates = this.getQuickStartTemplates();
+        
+        templates.forEach(template => {
+          const button = document.createElement('div');
+          button.className = 'quick-start-btn';
+          button.innerHTML = `
+            <div class="quick-start-name">${this.escapeHtml(template.name)}</div>
+            <div class="quick-start-details">${this.escapeHtml(template.filmName)} • ${this.escapeHtml(template.developerName)} ${this.escapeHtml(template.dilutionRatio)}</div>
+            <div class="quick-start-details">${template.baseTime} min @ ${template.baseTemperature}°C</div>
+          `;
+          button.addEventListener('click', () => this.useQuickStartTemplate(template));
+          container.appendChild(button);
+        });
+      }
+      
+      useQuickStartTemplate(template) {
+        // Check if this template already exists
+        const existingCombo = this.userCombinations.find(c => 
+          c.name === template.name
+        );
+        
+        if (existingCombo) {
+          this.useCombination(existingCombo.id);
+        } else {
+          // Create a temporary combination from template
+          const comboData = {
+            ...template,
+            id: 'template-' + Date.now(),
+            includePresoak: true,
+            stopBathDuration: 30,
+            fixerDuration: 300,
+            washDuration: 600,
+            includePhotoflo: true,
+            photofloDuration: 60
+          };
+          
+          this.currentCombination = comboData;
+          document.getElementById('saved-combination').value = '';
+          document.getElementById('temperature').value = comboData.baseTemperature;
+          
+          // Create development plan
+          this.developmentPlan = this.createDevelopmentPlan(comboData);
+          this.displayDevelopmentSteps();
+          this.updateTemperatureAdjustment();
+          
+          this.showNotification(`Loaded template: ${template.name}`, 'success');
+        }
+      }
+      
+      // Improved Temperature Compensation
+      calculateAdjustedTime(baseTime, baseTemp, currentTemp) {
+        if (baseTemp === currentTemp) return baseTime;
+        
+        // Use manufacturer-specific compensation curves where available
+        const compensationFactors = {
+          'hc110': { 
+            base: 20, 
+            factors: { 
+              16: 1.67, 17: 1.47, 18: 1.29, 19: 1.14, 20: 1.00,
+              21: 0.88, 22: 0.77, 23: 0.68, 24: 0.59, 25: 0.52 
+            } 
+          },
+          'rodinal': { 
+            base: 20,
+            factors: {
+              16: 1.5, 17: 1.35, 18: 1.22, 19: 1.10, 20: 1.00,
+              21: 0.91, 22: 0.83, 23: 0.76, 24: 0.69, 25: 0.63
+            }
+          },
+          'd76': {
+            base: 20,
+            factors: {
+              16: 1.47, 17: 1.33, 18: 1.21, 19: 1.10, 20: 1.00,
+              21: 0.91, 22: 0.83, 23: 0.76, 24: 0.69, 25: 0.63
+            }
+          },
+          'id11': {
+            base: 20,
+            factors: {
+              16: 1.47, 17: 1.33, 18: 1.21, 19: 1.10, 20: 1.00,
+              21: 0.91, 22: 0.83, 23: 0.76, 24: 0.69, 25: 0.63
+            }
+          },
+          'tmaxdeveloper': {
+            base: 20,
+            factors: {
+              16: 1.6, 17: 1.42, 18: 1.26, 19: 1.12, 20: 1.00,
+              21: 0.89, 22: 0.79, 23: 0.71, 24: 0.63, 25: 0.56
+            }
+          }
+        };
+        
+        const developerKey = this.currentCombination?.developerName?.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const compensation = compensationFactors[developerKey];
+        
+        if (compensation && compensation.factors[currentTemp]) {
+          const adjustedTime = baseTime * compensation.factors[currentTemp];
+          this.showNotification(`Using ${this.currentCombination.developerName} specific temperature compensation`, 'info', 2000);
+          return Math.max(0.5, Math.min(60, adjustedTime));
+        }
+        
+        // Fallback to Q10 calculation for unknown developers
+        const Q10 = 2.0;
+        const tempDiff = currentTemp - baseTemp;
+        const adjustmentFactor = Math.pow(Q10, tempDiff / 10);
+        const adjustedTime = baseTime * adjustmentFactor;
+        
+        return Math.max(0.5, Math.min(60, adjustedTime));
+      }
+      
+      // Improved Agitation System
+      parseAgitationInstructions(instructions, totalTime) {
+        const pattern = [0]; // Always agitate at start (initial inversions)
+        
+        if (!instructions) {
+          // Default to standard pattern
+          return this.createStandardAgitationPattern(totalTime);
+        }
+        
+        const lowerInstructions = instructions.toLowerCase();
+        
+        if (lowerInstructions.includes('standard') || 
+            (lowerInstructions.includes('8') && lowerInstructions.includes('4'))) {
+          return this.createStandardAgitationPattern(totalTime);
+        }
+        
+        // Parse other patterns (keeping your existing logic for compatibility)
+        if (lowerInstructions.includes('continuous first') && lowerInstructions.includes('then')) {
+          const firstMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
+          const thenMatch = instructions.match(/then.*?(\d+)\s*(seconds|s|sec)/i);
+          
+          if (firstMatch && thenMatch) {
+            const firstInterval = parseInt(firstMatch[1]);
+            const thenInterval = parseInt(thenMatch[1]);
+            
+            for (let t = 10; t <= firstInterval && t < totalTime; t += 10) {
+              pattern.push(t);
+            }
+            
+            for (let t = firstInterval + thenInterval; t < totalTime; t += thenInterval) {
+              pattern.push(t);
+            }
+          }
+        } else if (lowerInstructions.includes('continuous')) {
+          for (let t = 10; t < totalTime; t += 10) {
+            pattern.push(t);
+          }
+        } else if (lowerInstructions.includes('every') || lowerInstructions.includes('inversions')) {
+          const intervalMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
+          const interval = intervalMatch ? parseInt(intervalMatch[1]) : 60;
+          for (let t = interval; t < totalTime; t += interval) {
+            pattern.push(t);
+          }
+        } else {
+          // Default to standard pattern
+          return this.createStandardAgitationPattern(totalTime);
+        }
+        
+        return pattern;
+      }
+      
+      createStandardAgitationPattern(totalTime) {
+        const pattern = [0]; // Initial agitation at 0 seconds
+        
+        // Add agitation every 60 seconds after initial
+        for (let t = 60; t < totalTime; t += 60) {
+          pattern.push(t);
+        }
+        
+        return pattern;
+      }
+      
+      createAgitationTimeline(pattern, totalTime, stepElement) {
+        const timeline = document.createElement('div');
+        timeline.className = 'agitation-timeline';
+        
+        const label = document.createElement('div');
+        label.className = 'timeline-label';
+        label.textContent = 'Agitation Points:';
+        timeline.appendChild(label);
+        
+        const track = document.createElement('div');
+        track.style.position = 'relative';
+        track.style.height = '20px';
+        track.style.background = 'rgba(0,0,0,0.1)';
+        track.style.borderRadius = '10px';
+        track.style.marginTop = '4px';
+        
+        pattern.forEach((time, index) => {
+          const marker = document.createElement('div');
+          marker.className = 'agitation-marker';
+          marker.style.left = `${(time / totalTime) * 100}%`;
+          marker.setAttribute('data-time', this.formatTime(time));
+          marker.title = `${this.formatTime(time)} - ${index === 0 ? '8 inversions' : '4 inversions'}`;
+          track.appendChild(marker);
+        });
+        
+        timeline.appendChild(track);
+        stepElement.appendChild(timeline);
+      }
+      
+      // YOUR ORIGINAL METHODS - KEPT INTACT
       loadCombinations() {
         const saved = localStorage.getItem('filmDevelopmentCombinations');
         if (saved) {
@@ -1059,6 +1473,9 @@
         let instructions = '';
         
         switch(pattern) {
+          case 'standard-8-4':
+            instructions = '8 inversions initially, then 4 every minute';
+            break;
           case 'continuous-30-then-60':
             instructions = 'Continuous first 30s, then 4 inversions every 60s';
             break;
@@ -1251,16 +1668,6 @@
         }
         
         return developmentPlan;
-      }
-      
-      calculateAdjustedTime(baseTime, baseTemp, currentTemp) {
-        if (baseTemp === currentTemp) return baseTime;
-        
-        const Q10 = 2.0;
-        const tempDiff = currentTemp - baseTemp;
-        const adjustmentFactor = Math.pow(Q10, tempDiff / 10);
-        
-        return baseTime * adjustmentFactor;
       }
       
       updateTemperatureAdjustment() {
@@ -1554,18 +1961,21 @@
         document.getElementById("next-step-btn").style.display = "";
         
         // Play completion sound
-        this.playBeep(800, 0.3);
+        this.playBeep('stepComplete');
         
         this.showNotification(`Step ${this.currentStep + 1} complete! Ready for next step.`, "success");
       }
       
       triggerAgitation() {
         const alertElement = document.getElementById("agitation-alert");
-        alertElement.textContent = "AGITATE NOW!";
+        const isInitialAgitation = this.currentAgitationIndex === 0;
+        const inversionCount = isInitialAgitation ? "8 inversions" : "4 inversions";
+        
+        alertElement.textContent = `AGITATE NOW! (${inversionCount})`;
         alertElement.classList.remove("hidden");
         
-        // Play agitation alert sound
-        this.playBeep(1000, 0.5);
+        // Play improved agitation sound
+        this.playBeep('agitation');
         
         setTimeout(() => {
           alertElement.classList.add("hidden");
@@ -1593,10 +2003,8 @@
         this.timerPausedDuration = 0;
         this.stepComplete = false;
         
-        // Play completion sound
-        this.playBeep(600, 0.2);
-        setTimeout(() => this.playBeep(800, 0.2), 300);
-        setTimeout(() => this.playBeep(1000, 0.3), 600);
+        // Play improved completion sound
+        this.playBeep('developmentComplete');
         
         this.showNotification("Development process completed!", "success");
       }
@@ -1638,74 +2046,6 @@
         }
       }
       
-      // Utility functions
-      parseAgitationInstructions(instructions, totalTime) {
-        const pattern = [0]; // Always agitate at start
-        
-        if (!instructions) {
-          // Default pattern if no instructions provided
-          for (let t = 30; t < totalTime; t += 30) {
-            pattern.push(t);
-          }
-          return pattern;
-        }
-        
-        const lowerInstructions = instructions.toLowerCase();
-        
-        // Parse different agitation patterns
-        if (lowerInstructions.includes('continuous first') && lowerInstructions.includes('then')) {
-          // Parse patterns like "continuous first 30s, then 4 inversions every 60s"
-          const firstMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
-          const thenMatch = instructions.match(/then.*?(\d+)\s*(seconds|s|sec)/i);
-          
-          if (firstMatch && thenMatch) {
-            const firstInterval = parseInt(firstMatch[1]);
-            const thenInterval = parseInt(thenMatch[1]);
-            
-            // Add continuous agitation for first period (every 10 seconds)
-            for (let t = 10; t <= firstInterval && t < totalTime; t += 10) {
-              pattern.push(t);
-            }
-            
-            // Add interval agitation for remaining time
-            for (let t = firstInterval + thenInterval; t < totalTime; t += thenInterval) {
-              pattern.push(t);
-            }
-          } else {
-            // Default pattern if parsing fails
-            for (let t = 30; t < totalTime; t += 30) {
-              pattern.push(t);
-            }
-          }
-        } else if (lowerInstructions.includes('continuous')) {
-          // For continuous agitation, agitate every 10 seconds
-          for (let t = 10; t < totalTime; t += 10) {
-            pattern.push(t);
-          }
-        } else if (lowerInstructions.includes('every') || lowerInstructions.includes('inversions')) {
-          // Parse interval-based agitation like "4 inversions every 60 seconds"
-          const intervalMatch = instructions.match(/(\d+)\s*(seconds|s|sec)/i);
-          if (intervalMatch) {
-            const interval = parseInt(intervalMatch[1]);
-            for (let t = interval; t < totalTime; t += interval) {
-              pattern.push(t);
-            }
-          } else {
-            // Default to 30 seconds if no interval found
-            for (let t = 30; t < totalTime; t += 30) {
-              pattern.push(t);
-            }
-          }
-        } else {
-          // Default pattern if no recognized pattern
-          for (let t = 30; t < totalTime; t += 30) {
-            pattern.push(t);
-          }
-        }
-        
-        return pattern;
-      }
-      
       displayDevelopmentSteps() {
         const stepsContainer = document.getElementById('development-steps');
         stepsContainer.innerHTML = '<h2>Development Steps</h2>';
@@ -1719,6 +2059,11 @@
             <div class="step-duration">${this.formatTime(step.duration)}</div>
             <div class="step-instructions">${this.escapeHtml(step.instructions)}</div>
           `;
+          
+          // Add agitation timeline for developer step
+          if (step.name === "Developer" && step.agitationPattern.length > 0) {
+            this.createAgitationTimeline(step.agitationPattern, step.duration, stepDiv);
+          }
           
           stepsContainer.appendChild(stepDiv);
         });
