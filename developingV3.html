@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Film Development Assistant</title>
   <style>
+    /* All your existing CSS remains the same */
     :root {
       --primary: #e74c3c;
       --primary-dark: #c0392b;
@@ -1259,6 +1260,11 @@
         // Temperature change
         document.getElementById('temperature').addEventListener('change', () => {
           this.updateTemperatureAdjustment();
+          // Recalculate development plan with new temperature
+          if (this.currentCombination) {
+            this.developmentPlan = this.createDevelopmentPlan(this.currentCombination);
+            this.displayDevelopmentSteps();
+          }
         });
         
         // Agitation pattern change
@@ -1516,6 +1522,51 @@
             baseTime: 6.5,
             agitationPattern: "standard-8-4",
             agitationInstructions: "8 inversions initially, then 4 every minute"
+          },
+          // NEW: CineStill cS41 templates for color film
+          {
+            name: "CineStill 800T - cS41",
+            filmName: "CineStill 800T",
+            developerName: "CineStill cS41",
+            dilutionRatio: "2-part",
+            baseTemperature: 39,
+            baseTime: 3.5,
+            agitationPattern: "continuous-30-then-30",
+            agitationInstructions: "Continuous first 30s, then 4 inversions every 30s",
+            isColorProcess: true
+          },
+          {
+            name: "Portra 400 - cS41",
+            filmName: "Kodak Portra 400",
+            developerName: "CineStill cS41",
+            dilutionRatio: "2-part",
+            baseTemperature: 39,
+            baseTime: 3.5,
+            agitationPattern: "continuous-30-then-30",
+            agitationInstructions: "Continuous first 30s, then 4 inversions every 30s",
+            isColorProcess: true
+          },
+          {
+            name: "Ektar 100 - cS41",
+            filmName: "Kodak Ektar 100",
+            developerName: "CineStill cS41",
+            dilutionRatio: "2-part",
+            baseTemperature: 39,
+            baseTime: 3.5,
+            agitationPattern: "continuous-30-then-30",
+            agitationInstructions: "Continuous first 30s, then 4 inversions every 30s",
+            isColorProcess: true
+          },
+          {
+            name: "Fuji Pro 400H - cS41",
+            filmName: "Fujifilm Pro 400H",
+            developerName: "CineStill cS41",
+            dilutionRatio: "2-part",
+            baseTemperature: 39,
+            baseTime: 3.5,
+            agitationPattern: "continuous-30-then-30",
+            agitationInstructions: "Continuous first 30s, then 4 inversions every 30s",
+            isColorProcess: true
           }
         ];
       }
@@ -1527,8 +1578,13 @@
         templates.forEach(template => {
           const button = document.createElement('div');
           button.className = 'quick-start-btn';
+          
+          // Add a color indicator for C-41 process
+          const colorIndicator = template.isColorProcess ? 
+            '<div style="display: inline-block; width: 8px; height: 8px; background: #3498db; border-radius: 50%; margin-right: 5px;"></div>' : '';
+          
           button.innerHTML = `
-            <div class="quick-start-name">${this.escapeHtml(template.name)}</div>
+            <div class="quick-start-name">${colorIndicator}${this.escapeHtml(template.name)}</div>
             <div class="quick-start-details">${this.escapeHtml(template.filmName)} • ${this.escapeHtml(template.developerName)} ${this.escapeHtml(template.dilutionRatio)}</div>
             <div class="quick-start-details">${template.baseTime} min @ ${template.baseTemperature}°C</div>
           `;
@@ -1550,9 +1606,9 @@
           const comboData = {
             ...template,
             id: 'template-' + Date.now(),
-            includePresoak: true,
+            includePresoak: template.isColorProcess ? false : true, // No presoak for C-41
             stopBathDuration: 30,
-            fixerDuration: 300,
+            fixerDuration: template.isColorProcess ? 360 : 300, // Longer fixer for C-41
             washDuration: 600,
             includePhotoflo: true,
             photofloDuration: 60
@@ -1571,7 +1627,7 @@
         }
       }
       
-      // Improved Temperature Compensation
+      // Enhanced Temperature Compensation
       calculateAdjustedTime(baseTime, baseTemp, currentTemp) {
         if (baseTemp === currentTemp) return baseTime;
         
@@ -1610,6 +1666,14 @@
             factors: {
               16: 1.6, 17: 1.42, 18: 1.26, 19: 1.12, 20: 1.00,
               21: 0.89, 22: 0.79, 23: 0.71, 24: 0.63, 25: 0.56
+            }
+          },
+          // NEW: CineStill cS41 temperature compensation
+          'cinestillcs41': {
+            base: 39,
+            factors: {
+              36: 1.33, 37: 1.17, 38: 1.08, 39: 1.00,
+              40: 0.92, 41: 0.83, 42: 0.75
             }
           }
         };
@@ -2129,56 +2193,89 @@
         
         const developmentPlan = [];
         
-        // Add pre-soak step only if included
-        if (combo.includePresoak !== false) {
+        // For C-41 process (CineStill cS41), use different steps
+        if (combo.developerName.toLowerCase().includes('cinestill') || combo.isColorProcess) {
+          // C-41 process steps
           developmentPlan.push({ 
-            name: "Pre-soak", 
+            name: "Developer", 
+            duration: devTimeSeconds, 
+            instructions: combo.agitationInstructions,
+            agitationPattern: agitationPattern
+          });
+          
+          developmentPlan.push({ 
+            name: "Blix", 
+            duration: 480, // 8 minutes for blix
+            instructions: "Agitate continuously first 30s, then 4 inversions every 30s",
+            agitationPattern: []
+          });
+          
+          developmentPlan.push({ 
+            name: "Wash", 
+            duration: 210, // 3.5 minutes for wash
+            instructions: "Rinse with water, change water periodically",
+            agitationPattern: []
+          });
+          
+          developmentPlan.push({ 
+            name: "Stabilizer", 
             duration: 60, 
-            instructions: "Soak film in water at same temperature as developer",
+            instructions: "Use stabilizer for 1 minute",
             agitationPattern: []
           });
-        }
-        
-        // Add developer step
-        developmentPlan.push({ 
-          name: "Developer", 
-          duration: devTimeSeconds, 
-          instructions: combo.agitationInstructions,
-          agitationPattern: agitationPattern
-        });
-        
-        // Add stop bath step
-        developmentPlan.push({ 
-          name: "Stop Bath", 
-            duration: combo.stopBathDuration || 60, 
-            instructions: "Use stop bath or water rinse with continuous agitation",
-          agitationPattern: []
-        });
-        
-        // Add fixer step
-        developmentPlan.push({ 
-          name: "Fixer", 
-          duration: combo.fixerDuration || 180, 
-          instructions: "Use rapid fixer with appropriate agitation",
-          agitationPattern: []
-        });
-        
-        // Add wash step
-        developmentPlan.push({ 
-          name: "Wash", 
-          duration: combo.washDuration || 300, 
-          instructions: "Rinse with water, change water periodically",
-          agitationPattern: []
-        });
-        
-        // Add photo-flo step only if included
-        if (combo.includePhotoflo !== false) {
+        } else {
+          // Standard B&W process
+          // Add pre-soak step only if included
+          if (combo.includePresoak !== false) {
+            developmentPlan.push({ 
+              name: "Pre-soak", 
+              duration: 60, 
+              instructions: "Soak film in water at same temperature as developer",
+              agitationPattern: []
+            });
+          }
+          
+          // Add developer step
           developmentPlan.push({ 
-            name: "Photo-Flo", 
-            duration: combo.photofloDuration || 60, 
-            instructions: "Use wetting agent to prevent water spots",
+            name: "Developer", 
+            duration: devTimeSeconds, 
+            instructions: combo.agitationInstructions,
+            agitationPattern: agitationPattern
+          });
+          
+          // Add stop bath step
+          developmentPlan.push({ 
+            name: "Stop Bath", 
+              duration: combo.stopBathDuration || 60, 
+              instructions: "Use stop bath or water rinse with continuous agitation",
             agitationPattern: []
           });
+          
+          // Add fixer step
+          developmentPlan.push({ 
+            name: "Fixer", 
+            duration: combo.fixerDuration || 180, 
+            instructions: "Use rapid fixer with appropriate agitation",
+            agitationPattern: []
+          });
+          
+          // Add wash step
+          developmentPlan.push({ 
+            name: "Wash", 
+            duration: combo.washDuration || 300, 
+            instructions: "Rinse with water, change water periodically",
+            agitationPattern: []
+          });
+          
+          // Add photo-flo step only if included
+          if (combo.includePhotoflo !== false) {
+            developmentPlan.push({ 
+              name: "Photo-Flo", 
+              duration: combo.photofloDuration || 60, 
+              instructions: "Use wetting agent to prevent water spots",
+              agitationPattern: []
+            });
+          }
         }
         
         return developmentPlan;
