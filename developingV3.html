@@ -527,7 +527,7 @@
     /* New styles for agitation timeline */
     .agitation-timeline {
       position: relative;
-      height: 24px;
+      height: 60px;
       background: rgba(0,0,0,0.1);
       border-radius: 12px;
       margin: 0.75rem 0;
@@ -536,14 +536,14 @@
 
     .timeline-label {
       font-size: 0.8rem;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.70rem;
       opacity: 0.7;
     }
 
     .agitation-marker {
       position: absolute;
-      width: 16px;
-      height: 16px;
+      width: 6px;
+      height: 10px;
       background: var(--primary);
       border-radius: 50%;
       top: 4px;
@@ -559,10 +559,10 @@
       top: -20px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.7rem;
+      font-size: 0.5rem;
       background: var(--primary);
       color: white;
-      padding: 2px 6px;
+      padding: 6px 10px;
       border-radius: 4px;
       white-space: nowrap;
       opacity: 0;
@@ -811,6 +811,34 @@
         animation: none !important;
       }
     }
+    
+/* Fix for agitation timeline text visibility */
+.timeline-label {
+  color: var(--text-light) !important;
+  opacity: 0.9 !important;
+  font-weight: 500 !important;
+}
+
+.agitation-marker::after {
+  background: var(--primary) !important;
+  color: white !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+/* Make sure the agitation timeline has enough contrast */
+.agitation-timeline {
+  background: rgba(0,0,0,0.08) !important;
+  padding: 8px !important;
+  border-radius: var(--border-radius-sm) !important;
+}
+
+/* Fix for title and agitation points visibility */
+.app-header h1,
+.app-header p {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
   </style>
 </head>
 <body>
