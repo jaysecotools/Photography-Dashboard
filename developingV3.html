@@ -579,6 +579,9 @@
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 0.75rem;
       margin: 1rem 0;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 5px;
     }
 
     .quick-start-btn {
@@ -896,87 +899,72 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
-/* Add these styles to your existing CSS for scrollable Quick-Start section */
+    /* Custom scrollbar styling for better appearance */
+    .quick-start-grid::-webkit-scrollbar {
+      width: 6px;
+    }
 
-/* Make quick start templates scrollable on mobile */
-.quick-start-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.75rem;
-  margin: 1rem 0;
-  max-height: 400px; /* Limit height */
-  overflow-y: auto; /* Enable vertical scrolling */
-  padding-right: 5px; /* Space for scrollbar */
-}
+    .quick-start-grid::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 3px;
+    }
 
-/* Custom scrollbar styling for better appearance */
-.quick-start-grid::-webkit-scrollbar {
-  width: 6px;
-}
+    .quick-start-grid::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 3px;
+    }
 
-.quick-start-grid::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
+    .quick-start-grid::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
+    }
 
-.quick-start-grid::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 3px;
-}
+    /* Dark mode scrollbar */
+    .dark-mode .quick-start-grid::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
 
-.quick-start-grid::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-dark);
-}
+    .dark-mode .quick-start-grid::-webkit-scrollbar-thumb {
+      background: var(--primary-light);
+    }
 
-/* Dark mode scrollbar */
-.dark-mode .quick-start-grid::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
+    /* Ensure collapsible content can handle scrolling */
+    .collapsible-content {
+      overflow: hidden;
+      transition: max-height var(--transition-speed) ease;
+    }
 
-.dark-mode .quick-start-grid::-webkit-scrollbar-thumb {
-  background: var(--primary-light);
-}
+    .collapsible-section.expanded .collapsible-content {
+      overflow: visible;
+    }
 
-/* Ensure collapsible content can handle scrolling */
-.collapsible-content {
-  overflow: hidden;
-  transition: max-height var(--transition-speed) ease;
-}
+    /* Mobile-specific adjustments */
+    @media (max-width: 768px) {
+      .quick-start-grid {
+        grid-template-columns: 1fr;
+        max-height: 300px;
+        gap: 0.5rem;
+      }
+      
+      .quick-start-grid {
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .quick-start-btn {
+        padding: 0.75rem;
+      }
+    }
 
-.collapsible-section.expanded .collapsible-content {
-  overflow: visible; /* Allow scrolling when expanded */
-}
+    /* For very small screens */
+    @media (max-width: 480px) {
+      .quick-start-grid {
+        max-height: 250px;
+      }
+    }
 
-/* Mobile-specific adjustments */
-@media (max-width: 768px) {
-  .quick-start-grid {
-    grid-template-columns: 1fr;
-    max-height: 300px; /* Smaller max-height on mobile */
-    gap: 0.5rem;
-  }
-  
-  /* Improve touch scrolling on mobile */
-  .quick-start-grid {
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Adjust padding for better mobile appearance */
-  .quick-start-btn {
-    padding: 0.75rem;
-  }
-}
-
-/* For very small screens */
-@media (max-width: 480px) {
-  .quick-start-grid {
-    max-height: 250px;
-  }
-}
-
-/* Ensure the templates are always accessible */
-#quick-start-templates {
-  min-height: 50px; /* Minimum height even when empty */
-}
+    /* Ensure the templates are always accessible */
+    #quick-start-templates {
+      min-height: 50px;
+    }
   </style>
 </head>
 <body>
@@ -1164,7 +1152,7 @@
           <div class="input-group">
             <label for="fixer-duration">Fixer Duration (seconds)</label>
             <input type="number" id="fixer-duration" min="30" max="600" value="300" />
-            <div class="info-text">Use rapid fixer with agitation - continuous first 30s, then every 30s</div>
+            <div class="info-text">Use rapid fixer with agitation - 8 inversions initially, then 4 every minute</div>
           </div>
           
           <div class="input-group">
@@ -1747,7 +1735,7 @@
             base: 20,
             factors: {
               16: 1.6, 17: 1.42, 18: 1.26, 19: 1.12, 20: 1.00,
-              21: 0.89, 22: 0.79, 23: 0.71, 24: 0.63, 25: 0.56
+              21: 0.91, 22: 0.83, 23: 0.76, 24: 0.69, 25: 0.56
             }
           },
           // NEW: CineStill cS41 temperature compensation
@@ -1834,6 +1822,34 @@
         
         // Add agitation every 60 seconds after initial
         for (let t = 60; t < totalTime; t += 60) {
+          pattern.push(t);
+        }
+        
+        return pattern;
+      }
+      
+      // FIXED: Now fixer uses 8+4 pattern for B&W and continuous+30s for color
+      createFixerAgitationPattern(totalTime, isColorProcess = false) {
+        if (isColorProcess) {
+          // Color process: continuous first 30s, then 4 inversions every 30s
+          return this.createColorAgitationPattern(totalTime);
+        } else {
+          // B&W process: 8 inversions initially, then 4 every minute
+          return this.createStandardAgitationPattern(totalTime);
+        }
+      }
+      
+      // Color film pattern - Continuous first 30s, then 4 inversions every 30s
+      createColorAgitationPattern(totalTime) {
+        const pattern = [0]; // Initial agitation at 0 seconds
+        
+        // Continuous agitation for first 30 seconds (every 10 seconds)
+        for (let t = 10; t <= 30 && t < totalTime; t += 10) {
+          pattern.push(t);
+        }
+        
+        // Then every 30 seconds
+        for (let t = 60; t < totalTime; t += 30) {
           pattern.push(t);
         }
         
@@ -1943,480 +1959,118 @@
         }
       }
       
-      // YOUR ORIGINAL METHODS - KEPT INTACT
-      loadCombinations() {
-        const saved = localStorage.getItem('filmDevelopmentCombinations');
-        if (saved) {
-          try {
-            this.userCombinations = JSON.parse(saved);
-          } catch (e) {
-            console.error('Error loading combinations:', e);
-            this.userCombinations = [];
-            this.showNotification('Error loading saved combinations', 'error');
-          }
-        }
-      }
-      
-      saveCombinations() {
-        try {
-          localStorage.setItem('filmDevelopmentCombinations', JSON.stringify(this.userCombinations));
-          return true;
-        } catch (e) {
-          console.error('Error saving combinations:', e);
-          if (e.name === 'QuotaExceededError') {
-            this.showNotification('Storage limit exceeded. Please delete some combinations.', 'error');
-          } else {
-            this.showNotification('Error saving combinations', 'error');
-          }
-          return false;
-        }
-      }
-      
-      updateCombinationDropdown() {
-        const dropdown = document.getElementById('saved-combination');
-        dropdown.innerHTML = '<option value="">-- Select a saved combination --</option>';
-        
-        this.userCombinations.forEach(combo => {
-          const option = document.createElement('option');
-          option.value = combo.id;
-          option.textContent = combo.name;
-          dropdown.appendChild(option);
-        });
-      }
-      
-      renderCombinationsList() {
-        const container = document.getElementById('combinations-list');
-        container.innerHTML = '';
-        
-        if (this.userCombinations.length === 0) {
-          container.innerHTML = '<p>No combinations saved yet.</p>';
-          return;
-        }
-        
-        this.userCombinations.forEach(combo => {
-          const div = document.createElement('div');
-          div.className = 'combination-item';
-          div.innerHTML = `
-            <div class="combination-name">${this.escapeHtml(combo.name)}</div>
-            <div class="combination-details">${this.escapeHtml(combo.filmName)} with ${this.escapeHtml(combo.developerName)} ${this.escapeHtml(combo.dilutionRatio)}</div>
-            <div class="combination-details">${combo.baseTime} min at ${combo.baseTemperature}°C</div>
-            <div class="button-group" style="margin-top: 0.5rem;">
-              <button class="secondary-btn" data-action="edit" data-id="${combo.id}">Edit</button>
-              <button class="secondary-btn" data-action="delete" data-id="${combo.id}">Delete</button>
-              <button class="primary-btn" data-action="use" data-id="${combo.id}">Use</button>
-            </div>
-          `;
-          container.appendChild(div);
-        });
-        
-        // Add event listeners to the buttons
-        container.querySelectorAll('button').forEach(button => {
-          button.addEventListener('click', (e) => {
-            const action = e.target.dataset.action;
-            const id = e.target.dataset.id;
-            
-            if (action === 'edit') {
-              this.editCombination(id);
-            } else if (action === 'delete') {
-              this.deleteCombination(id);
-            } else if (action === 'use') {
-              this.useCombination(id);
-            }
-          });
-        });
-      }
-      
-      useCombination(comboId) {
-        const combo = this.userCombinations.find(c => c.id === comboId);
-        if (combo) {
-          this.currentCombination = combo;
-          document.getElementById('saved-combination').value = comboId;
-          document.getElementById('temperature').value = combo.baseTemperature;
-          
-          // Create development plan
-          this.developmentPlan = this.createDevelopmentPlan(combo);
-          this.displayDevelopmentSteps();
-          this.updateTemperatureAdjustment();
-          
-          this.switchTab('use-tab');
-          this.showNotification(`Loaded combination: ${combo.name}`, 'success');
-        } else {
-          this.showNotification('Combination not found', 'error');
-        }
-      }
-      
-      editCombination(comboId) {
-        const combo = this.userCombinations.find(c => c.id === comboId);
-        if (combo) {
-          this.editingCombinationId = comboId;
-          
-          // Fill the form with the combination data
-          document.getElementById('combination-name').value = combo.name;
-          document.getElementById('film-name').value = combo.filmName;
-          document.getElementById('developer-name').value = combo.developerName;
-          document.getElementById('dilution-ratio').value = combo.dilutionRatio;
-          document.getElementById('base-temperature').value = combo.baseTemperature;
-          document.getElementById('base-time').value = combo.baseTime;
-          document.getElementById('agitation-pattern').value = combo.agitationPattern || 'continuous-30-then-60';
-          document.getElementById('agitation-instructions').value = combo.agitationInstructions;
-          document.getElementById('include-presoak').checked = combo.includePresoak !== false;
-          document.getElementById('stop-bath-duration').value = combo.stopBathDuration || 30;
-          document.getElementById('fixer-duration').value = combo.fixerDuration || 300;
-          document.getElementById('wash-duration').value = combo.washDuration || 600;
-          document.getElementById('include-photoflo').checked = combo.includePhotoflo !== false;
-          document.getElementById('photoflo-duration').value = combo.photofloDuration || 60;
-          
-          // Update agitation instructions based on pattern
-          this.updateAgitationInstructions();
-          
-          // Show edit mode UI
-          document.getElementById('cancel-edit-btn').style.display = '';
-          document.getElementById('edit-info').style.display = 'block';
-          
-          // Preview agitation pattern
-          this.previewAgitationPattern();
-          
-          this.switchTab('create-tab');
-          this.showNotification(`Editing combination: ${combo.name}`, 'info');
-        } else {
-          this.showNotification('Combination not found', 'error');
-        }
-      }
-      
-      cancelEdit() {
-        this.editingCombinationId = null;
-        document.getElementById('cancel-edit-btn').style.display = 'none';
-        document.getElementById('edit-info').style.display = 'none';
-        this.clearCombinationForm();
-        this.showNotification('Edit cancelled', 'info');
-      }
-      
-      deleteCombination(comboId) {
-        if (confirm('Are you sure you want to delete this combination?')) {
-          this.userCombinations = this.userCombinations.filter(c => c.id !== comboId);
-          if (this.saveCombinations()) {
-            this.updateCombinationDropdown();
-            this.renderCombinationsList();
-            this.showNotification('Combination deleted', 'success');
-          }
-        }
-      }
-      
-      clearCombinationForm() {
-        document.getElementById('combination-name').value = '';
-        document.getElementById('film-name').value = '';
-        document.getElementById('developer-name').value = '';
-        document.getElementById('dilution-ratio').value = '';
-        document.getElementById('base-temperature').value = 20;
-        document.getElementById('base-time').value = '';
-        document.getElementById('agitation-pattern').value = 'continuous-30-then-60';
-        document.getElementById('agitation-instructions').value = '';
-        document.getElementById('include-presoak').checked = true;
-        document.getElementById('stop-bath-duration').value = 30;
-        document.getElementById('fixer-duration').value = 300;
-        document.getElementById('wash-duration').value = 600;
-        document.getElementById('include-photoflo').checked = true;
-        document.getElementById('photoflo-duration').value = 60;
-        document.getElementById('agitation-preview').textContent = '';
-        
-        // Update agitation instructions based on default pattern
-        this.updateAgitationInstructions();
-        
-        // Hide edit mode UI
-        document.getElementById('cancel-edit-btn').style.display = 'none';
-        document.getElementById('edit-info').style.display = 'none';
-        this.editingCombinationId = null;
-      }
-      
-      updateAgitationInstructions() {
-        const pattern = document.getElementById('agitation-pattern').value;
-        let instructions = '';
-        
-        switch(pattern) {
-          case 'standard-8-4':
-            instructions = '8 inversions initially, then 4 every minute';
-            break;
-          case 'continuous-30-then-60':
-            instructions = 'Continuous first 30s, then 4 inversions every 60s';
-            break;
-          case 'continuous-30-then-30':
-            instructions = 'Continuous first 30s, then 4 inversions every 30s';
-            break;
-          case 'every-30':
-            instructions = '4 inversions every 30s';
-            break;
-          case 'every-60':
-            instructions = '4 inversions every 60s';
-            break;
-          case 'custom':
-            // Keep existing custom instructions
-            return;
-        }
-        
-        document.getElementById('agitation-instructions').value = instructions;
-        this.previewAgitationPattern();
-      }
-      
-      saveCombination() {
-        const name = document.getElementById('combination-name').value.trim();
-        const filmName = document.getElementById('film-name').value.trim();
-        const developerName = document.getElementById('developer-name').value.trim();
-        const dilutionRatio = document.getElementById('dilution-ratio').value.trim();
-        const baseTemperature = parseFloat(document.getElementById('base-temperature').value);
-        const baseTime = parseFloat(document.getElementById('base-time').value);
-        const agitationPattern = document.getElementById('agitation-pattern').value;
-        const agitationInstructions = document.getElementById('agitation-instructions').value.trim();
-        const includePresoak = document.getElementById('include-presoak').checked;
-        const stopBathDuration = parseInt(document.getElementById('stop-bath-duration').value);
-        const fixerDuration = parseInt(document.getElementById('fixer-duration').value);
-        const washDuration = parseInt(document.getElementById('wash-duration').value);
-        const includePhotoflo = document.getElementById('include-photoflo').checked;
-        const photofloDuration = parseInt(document.getElementById('photoflo-duration').value);
-        
-        // Validation
-        if (!name) {
-          this.showNotification('Please enter a combination name', 'error');
-          return;
-        }
-        
-        if (!filmName) {
-          this.showNotification('Please enter a film name', 'error');
-          return;
-        }
-        
-        if (!developerName) {
-          this.showNotification('Please enter a developer name', 'error');
-          return;
-        }
-        
-        if (!dilutionRatio) {
-          this.showNotification('Please enter a dilution ratio', 'error');
-          return;
-        }
-        
-        if (isNaN(baseTemperature) || baseTemperature < 10 || baseTemperature > 40) {
-          this.showNotification('Please enter a valid temperature between 10°C and 40°C', 'error');
-          return;
-        }
-        
-        if (isNaN(baseTime) || baseTime <= 0) {
-          this.showNotification('Please enter a valid development time', 'error');
-          return;
-        }
-        
-        // Check for duplicate names (excluding the one we're editing)
-        const existingCombo = this.userCombinations.find(c => 
-          c.name.toLowerCase() === name.toLowerCase() && 
-          c.id !== this.editingCombinationId
-        );
-        
-        if (existingCombo) {
-          this.showNotification(`A combination named "${name}" already exists`, 'error');
-          return;
-        }
-        
-        const comboData = {
-          id: this.editingCombinationId || this.generateId(),
-          name,
-          filmName,
-          developerName,
-          dilutionRatio,
-          baseTemperature,
-          baseTime,
-          agitationPattern,
-          agitationInstructions,
-          includePresoak,
-          stopBathDuration,
-          fixerDuration,
-          washDuration,
-          includePhotoflo,
-          photofloDuration,
-          created: new Date().toISOString(),
-          updated: new Date().toISOString()
-        };
-        
-        if (this.editingCombinationId) {
-          // Update existing combination
-          const index = this.userCombinations.findIndex(c => c.id === this.editingCombinationId);
-          if (index !== -1) {
-            this.userCombinations[index] = comboData;
-          }
-          this.showNotification(`Combination "${name}" updated successfully!`, 'success');
-        } else {
-          // Add new combination
-          this.userCombinations.push(comboData);
-          this.showNotification('Combination saved successfully!', 'success');
-        }
-        
-        if (this.saveCombinations()) {
-          this.updateCombinationDropdown();
-          this.renderCombinationsList();
-          
-          // Clear the form and exit edit mode
-          this.clearCombinationForm();
-          
-          // Switch to manage tab to see the updated list
-          this.switchTab('manage-tab');
-        }
-      }
-      
+      // UPDATED: Development Plan Creation with proper fixer agitation patterns
       createDevelopmentPlan(combo) {
-  // Get current temperature
-  const currentTemp = parseFloat(document.getElementById('temperature').value) || combo.baseTemperature;
-  
-  // Calculate adjusted development time based on temperature
-  const adjustedDevTime = this.calculateAdjustedTime(combo.baseTime, combo.baseTemperature, currentTemp);
-  
-  // Convert minutes to seconds for timer
-  const devTimeSeconds = adjustedDevTime * 60;
-  
-  // Parse agitation instructions for developer
-  const agitationPattern = this.parseAgitationInstructions(combo.agitationInstructions, devTimeSeconds);
-  
-  // Create agitation pattern for Blix (every 30 seconds)
-  const blixAgitationPattern = this.createBlixAgitationPattern(480); // 8 minutes for blix
-  
-  // Create agitation pattern for Fixer (every 30 seconds)
-  const fixerAgitationPattern = this.createFixerAgitationPattern(combo.fixerDuration || 300);
-  
-  const developmentPlan = [];
-  
-  // For C-41 process (CineStill cS41), use different steps
-  if (combo.developerName.toLowerCase().includes('cinestill') || combo.isColorProcess) {
-    // C-41 process steps
-    developmentPlan.push({ 
-      name: "Developer", 
-      duration: devTimeSeconds, 
-      instructions: combo.agitationInstructions,
-      agitationPattern: agitationPattern
-    });
-    
-    developmentPlan.push({ 
-      name: "Blix", 
-      duration: 480, // 8 minutes for blix
-      instructions: "Agitate continuously first 30s, then 4 inversions every 30s",
-      agitationPattern: blixAgitationPattern // ADDED: agitation pattern for Blix
-    });
-    
-    developmentPlan.push({ 
-      name: "Wash", 
-      duration: 210, // 3.5 minutes for wash
-      instructions: "Rinse with water, change water periodically",
-      agitationPattern: []
-    });
-    
-    developmentPlan.push({ 
-      name: "Stabilizer", 
-      duration: 60, 
-      instructions: "Use stabilizer for 1 minute",
-      agitationPattern: []
-    });
-  } else {
-    // Standard B&W process
-    // Add pre-soak step only if included
-    if (combo.includePresoak !== false) {
-      developmentPlan.push({ 
-        name: "Pre-soak", 
-        duration: 60, 
-        instructions: "Soak film in water at same temperature as developer",
-        agitationPattern: []
-      });
-    }
-    
-    // Add developer step
-    developmentPlan.push({ 
-      name: "Developer", 
-      duration: devTimeSeconds, 
-      instructions: combo.agitationInstructions,
-      agitationPattern: agitationPattern
-    });
-    
-    // Add stop bath step
-    developmentPlan.push({ 
-      name: "Stop Bath", 
-      duration: combo.stopBathDuration || 60, 
-      instructions: "Use stop bath or water rinse with continuous agitation",
-      agitationPattern: []
-    });
-    
-    // Add fixer step WITH AGITATION
-    developmentPlan.push({ 
-      name: "Fixer", 
-      duration: combo.fixerDuration || 300, 
-      instructions: "Agitate continuously first 30s, then 4 inversions every 30s",
-      agitationPattern: fixerAgitationPattern // ADDED: agitation pattern for Fixer
-    });
-    
-    // Add wash step
-    developmentPlan.push({ 
-      name: "Wash", 
-      duration: combo.washDuration || 300, 
-      instructions: "Rinse with water, change water periodically",
-      agitationPattern: []
-    });
-    
-    // Add photo-flo step only if included
-    if (combo.includePhotoflo !== false) {
-      developmentPlan.push({ 
-        name: "Photo-Flo", 
-        duration: combo.photofloDuration || 60, 
-        instructions: "Use wetting agent to prevent water spots",
-        agitationPattern: []
-      });
-    }
-  }
-  
-  return developmentPlan;
-}
-
-// Add these new methods to create agitation patterns for Blix and Fixer:
-createBlixAgitationPattern(totalTime) {
-  const pattern = [0]; // Initial agitation at 0 seconds
-  
-  // Continuous agitation for first 30 seconds (every 10 seconds)
-  for (let t = 10; t <= 30 && t < totalTime; t += 10) {
-    pattern.push(t);
-  }
-  
-  // Then every 30 seconds
-  for (let t = 60; t < totalTime; t += 30) {
-    pattern.push(t);
-  }
-  
-  return pattern;
-}
-
-createFixerAgitationPattern(totalTime) {
-  const pattern = [0]; // Initial agitation at 0 seconds
-  
-  // Continuous agitation for first 30 seconds (every 10 seconds)
-  for (let t = 10; t <= 30 && t < totalTime; t += 10) {
-    pattern.push(t);
-  }
-  
-  // Then every 30 seconds
-  for (let t = 60; t < totalTime; t += 30) {
-    pattern.push(t);
-  }
-  
-  return pattern;
-}
-
-createFixerAgitationPattern(totalTime) {
-  const pattern = [0]; // Initial agitation at 0 seconds
-  
-  // Continuous agitation for first 30 seconds (every 10 seconds)
-  for (let t = 10; t <= 30 && t < totalTime; t += 10) {
-    pattern.push(t);
-  }
-  
-  // Then every 30 seconds
-  for (let t = 60; t < totalTime; t += 30) {
-    pattern.push(t);
-  }
-  
-  return pattern;
-}
+        // Get current temperature
+        const currentTemp = parseFloat(document.getElementById('temperature').value) || combo.baseTemperature;
+        
+        // Calculate adjusted development time based on temperature
+        const adjustedDevTime = this.calculateAdjustedTime(combo.baseTime, combo.baseTemperature, currentTemp);
+        
+        // Convert minutes to seconds for timer
+        const devTimeSeconds = adjustedDevTime * 60;
+        
+        // Check if this is a color process
+        const isColorProcess = combo.developerName.toLowerCase().includes('cinestill') || combo.isColorProcess;
+        
+        // Parse agitation instructions for developer
+        const agitationPattern = this.parseAgitationInstructions(combo.agitationInstructions, devTimeSeconds);
+        
+        // Create agitation pattern for Blix (every 30 seconds for color)
+        const blixAgitationPattern = this.createColorAgitationPattern(480); // 8 minutes for blix
+        
+        // FIXED: Create agitation pattern for Fixer - now uses 8+4 for B&W, continuous+30s for color
+        const fixerAgitationPattern = this.createFixerAgitationPattern(combo.fixerDuration || 300, isColorProcess);
+        
+        const developmentPlan = [];
+        
+        // For C-41 process (CineStill cS41), use different steps
+        if (isColorProcess) {
+          // C-41 process steps
+          developmentPlan.push({ 
+            name: "Developer", 
+            duration: devTimeSeconds, 
+            instructions: "Continuous first 30s, then 4 inversions every 30s",
+            agitationPattern: agitationPattern
+          });
+          
+          developmentPlan.push({ 
+            name: "Blix", 
+            duration: 480, // 8 minutes for blix
+            instructions: "Agitate continuously first 30s, then 4 inversions every 30s",
+            agitationPattern: blixAgitationPattern
+          });
+          
+          developmentPlan.push({ 
+            name: "Wash", 
+            duration: 210, // 3.5 minutes for wash
+            instructions: "Rinse with water, change water periodically",
+            agitationPattern: []
+          });
+          
+          developmentPlan.push({ 
+            name: "Stabilizer", 
+            duration: 60, 
+            instructions: "Use stabilizer for 1 minute",
+            agitationPattern: []
+          });
+        } else {
+          // Standard B&W process
+          // Add pre-soak step only if included
+          if (combo.includePresoak !== false) {
+            developmentPlan.push({ 
+              name: "Pre-soak", 
+              duration: 60, 
+              instructions: "Soak film in water at same temperature as developer",
+              agitationPattern: []
+            });
+          }
+          
+          // Add developer step
+          developmentPlan.push({ 
+            name: "Developer", 
+            duration: devTimeSeconds, 
+            instructions: combo.agitationInstructions,
+            agitationPattern: agitationPattern
+          });
+          
+          // Add stop bath step
+          developmentPlan.push({ 
+            name: "Stop Bath", 
+            duration: combo.stopBathDuration || 60, 
+            instructions: "Use stop bath or water rinse with continuous agitation",
+            agitationPattern: []
+          });
+          
+          // FIXED: Add fixer step WITH UPDATED AGITATION - 8+4 for B&W
+          developmentPlan.push({ 
+            name: "Fixer", 
+            duration: combo.fixerDuration || 300, 
+            instructions: "8 inversions initially, then 4 every minute",
+            agitationPattern: fixerAgitationPattern
+          });
+          
+          // Add wash step
+          developmentPlan.push({ 
+            name: "Wash", 
+            duration: combo.washDuration || 300, 
+            instructions: "Rinse with water, change water periodically",
+            agitationPattern: []
+          });
+          
+          // Add photo-flo step only if included
+          if (combo.includePhotoflo !== false) {
+            developmentPlan.push({ 
+              name: "Photo-Flo", 
+              duration: combo.photofloDuration || 60, 
+              instructions: "Use wetting agent to prevent water spots",
+              agitationPattern: []
+            });
+          }
+        }
+        
+        return developmentPlan;
+      }
       
       updateTemperatureAdjustment() {
         if (!this.currentCombination) return;
@@ -2819,29 +2473,29 @@ createFixerAgitationPattern(totalTime) {
         }
       }
       
-displayDevelopmentSteps() {
-  const stepsContainer = document.getElementById('development-steps');
-  stepsContainer.innerHTML = '<h2>Development Steps</h2>';
-  
-  this.developmentPlan.forEach((step, i) => {
-    const stepDiv = document.createElement('div');
-    stepDiv.className = 'step-display' + (i === this.currentStep ? ' current-step' : '');
-    
-    stepDiv.innerHTML = `
-      <div class="step-title">${this.escapeHtml(step.name)}</div>
-      <div class="step-duration">${this.formatTime(step.duration)}</div>
-      <div class="step-instructions">${this.escapeHtml(step.instructions)}</div>
-    `;
-    
-    // Add agitation timeline for steps that have agitation patterns
-    if ((step.name === "Developer" || step.name === "Blix" || step.name === "Fixer") && 
-        step.agitationPattern.length > 0) {
-      this.createAgitationTimeline(step.agitationPattern, step.duration, stepDiv);
-    }
-    
-    stepsContainer.appendChild(stepDiv);
-  });
-}
+      displayDevelopmentSteps() {
+        const stepsContainer = document.getElementById('development-steps');
+        stepsContainer.innerHTML = '<h2>Development Steps</h2>';
+        
+        this.developmentPlan.forEach((step, i) => {
+          const stepDiv = document.createElement('div');
+          stepDiv.className = 'step-display' + (i === this.currentStep ? ' current-step' : '');
+          
+          stepDiv.innerHTML = `
+            <div class="step-title">${this.escapeHtml(step.name)}</div>
+            <div class="step-duration">${this.formatTime(step.duration)}</div>
+            <div class="step-instructions">${this.escapeHtml(step.instructions)}</div>
+          `;
+          
+          // Add agitation timeline for steps that have agitation patterns
+          if ((step.name === "Developer" || step.name === "Blix" || step.name === "Fixer") && 
+              step.agitationPattern.length > 0) {
+            this.createAgitationTimeline(step.agitationPattern, step.duration, stepDiv);
+          }
+          
+          stepsContainer.appendChild(stepDiv);
+        });
+      }
       
       formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -2869,6 +2523,323 @@ displayDevelopmentSteps() {
       
       cleanup() {
         this.clearTimers();
+      }
+      
+      // YOUR ORIGINAL METHODS - KEPT INTACT
+      loadCombinations() {
+        const saved = localStorage.getItem('filmDevelopmentCombinations');
+        if (saved) {
+          try {
+            this.userCombinations = JSON.parse(saved);
+          } catch (e) {
+            console.error('Error loading combinations:', e);
+            this.userCombinations = [];
+            this.showNotification('Error loading saved combinations', 'error');
+          }
+        }
+      }
+      
+      saveCombinations() {
+        try {
+          localStorage.setItem('filmDevelopmentCombinations', JSON.stringify(this.userCombinations));
+          return true;
+        } catch (e) {
+          console.error('Error saving combinations:', e);
+          if (e.name === 'QuotaExceededError') {
+            this.showNotification('Storage limit exceeded. Please delete some combinations.', 'error');
+          } else {
+            this.showNotification('Error saving combinations', 'error');
+          }
+          return false;
+        }
+      }
+      
+      updateCombinationDropdown() {
+        const dropdown = document.getElementById('saved-combination');
+        dropdown.innerHTML = '<option value="">-- Select a saved combination --</option>';
+        
+        this.userCombinations.forEach(combo => {
+          const option = document.createElement('option');
+          option.value = combo.id;
+          option.textContent = combo.name;
+          dropdown.appendChild(option);
+        });
+      }
+      
+      renderCombinationsList() {
+        const container = document.getElementById('combinations-list');
+        container.innerHTML = '';
+        
+        if (this.userCombinations.length === 0) {
+          container.innerHTML = '<p>No combinations saved yet.</p>';
+          return;
+        }
+        
+        this.userCombinations.forEach(combo => {
+          const div = document.createElement('div');
+          div.className = 'combination-item';
+          div.innerHTML = `
+            <div class="combination-name">${this.escapeHtml(combo.name)}</div>
+            <div class="combination-details">${this.escapeHtml(combo.filmName)} with ${this.escapeHtml(combo.developerName)} ${this.escapeHtml(combo.dilutionRatio)}</div>
+            <div class="combination-details">${combo.baseTime} min at ${combo.baseTemperature}°C</div>
+            <div class="button-group" style="margin-top: 0.5rem;">
+              <button class="secondary-btn" data-action="edit" data-id="${combo.id}">Edit</button>
+              <button class="secondary-btn" data-action="delete" data-id="${combo.id}">Delete</button>
+              <button class="primary-btn" data-action="use" data-id="${combo.id}">Use</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+        
+        // Add event listeners to the buttons
+        container.querySelectorAll('button').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            const id = e.target.dataset.id;
+            
+            if (action === 'edit') {
+              this.editCombination(id);
+            } else if (action === 'delete') {
+              this.deleteCombination(id);
+            } else if (action === 'use') {
+              this.useCombination(id);
+            }
+          });
+        });
+      }
+      
+      useCombination(comboId) {
+        const combo = this.userCombinations.find(c => c.id === comboId);
+        if (combo) {
+          this.currentCombination = combo;
+          document.getElementById('saved-combination').value = comboId;
+          document.getElementById('temperature').value = combo.baseTemperature;
+          
+          // Create development plan
+          this.developmentPlan = this.createDevelopmentPlan(combo);
+          this.displayDevelopmentSteps();
+          this.updateTemperatureAdjustment();
+          
+          this.switchTab('use-tab');
+          this.showNotification(`Loaded combination: ${combo.name}`, 'success');
+        } else {
+          this.showNotification('Combination not found', 'error');
+        }
+      }
+      
+      editCombination(comboId) {
+        const combo = this.userCombinations.find(c => c.id === comboId);
+        if (combo) {
+          this.editingCombinationId = comboId;
+          
+          // Fill the form with the combination data
+          document.getElementById('combination-name').value = combo.name;
+          document.getElementById('film-name').value = combo.filmName;
+          document.getElementById('developer-name').value = combo.developerName;
+          document.getElementById('dilution-ratio').value = combo.dilutionRatio;
+          document.getElementById('base-temperature').value = combo.baseTemperature;
+          document.getElementById('base-time').value = combo.baseTime;
+          document.getElementById('agitation-pattern').value = combo.agitationPattern || 'standard-8-4';
+          document.getElementById('agitation-instructions').value = combo.agitationInstructions;
+          document.getElementById('include-presoak').checked = combo.includePresoak !== false;
+          document.getElementById('stop-bath-duration').value = combo.stopBathDuration || 30;
+          document.getElementById('fixer-duration').value = combo.fixerDuration || 300;
+          document.getElementById('wash-duration').value = combo.washDuration || 600;
+          document.getElementById('include-photoflo').checked = combo.includePhotoflo !== false;
+          document.getElementById('photoflo-duration').value = combo.photofloDuration || 60;
+          
+          // Update agitation instructions based on pattern
+          this.updateAgitationInstructions();
+          
+          // Show edit mode UI
+          document.getElementById('cancel-edit-btn').style.display = '';
+          document.getElementById('edit-info').style.display = 'block';
+          
+          // Preview agitation pattern
+          this.previewAgitationPattern();
+          
+          this.switchTab('create-tab');
+          this.showNotification(`Editing combination: ${combo.name}`, 'info');
+        } else {
+          this.showNotification('Combination not found', 'error');
+        }
+      }
+      
+      cancelEdit() {
+        this.editingCombinationId = null;
+        document.getElementById('cancel-edit-btn').style.display = 'none';
+        document.getElementById('edit-info').style.display = 'none';
+        this.clearCombinationForm();
+        this.showNotification('Edit cancelled', 'info');
+      }
+      
+      deleteCombination(comboId) {
+        if (confirm('Are you sure you want to delete this combination?')) {
+          this.userCombinations = this.userCombinations.filter(c => c.id !== comboId);
+          if (this.saveCombinations()) {
+            this.updateCombinationDropdown();
+            this.renderCombinationsList();
+            this.showNotification('Combination deleted', 'success');
+          }
+        }
+      }
+      
+      clearCombinationForm() {
+        document.getElementById('combination-name').value = '';
+        document.getElementById('film-name').value = '';
+        document.getElementById('developer-name').value = '';
+        document.getElementById('dilution-ratio').value = '';
+        document.getElementById('base-temperature').value = 20;
+        document.getElementById('base-time').value = '';
+        document.getElementById('agitation-pattern').value = 'standard-8-4';
+        document.getElementById('agitation-instructions').value = '';
+        document.getElementById('include-presoak').checked = true;
+        document.getElementById('stop-bath-duration').value = 30;
+        document.getElementById('fixer-duration').value = 300;
+        document.getElementById('wash-duration').value = 600;
+        document.getElementById('include-photoflo').checked = true;
+        document.getElementById('photoflo-duration').value = 60;
+        document.getElementById('agitation-preview').textContent = '';
+        
+        // Update agitation instructions based on default pattern
+        this.updateAgitationInstructions();
+        
+        // Hide edit mode UI
+        document.getElementById('cancel-edit-btn').style.display = 'none';
+        document.getElementById('edit-info').style.display = 'none';
+        this.editingCombinationId = null;
+      }
+      
+      updateAgitationInstructions() {
+        const pattern = document.getElementById('agitation-pattern').value;
+        let instructions = '';
+        
+        switch(pattern) {
+          case 'standard-8-4':
+            instructions = '8 inversions initially, then 4 every minute';
+            break;
+          case 'continuous-30-then-60':
+            instructions = 'Continuous first 30s, then 4 inversions every 60s';
+            break;
+          case 'continuous-30-then-30':
+            instructions = 'Continuous first 30s, then 4 inversions every 30s';
+            break;
+          case 'every-30':
+            instructions = '4 inversions every 30s';
+            break;
+          case 'every-60':
+            instructions = '4 inversions every 60s';
+            break;
+          case 'custom':
+            // Keep existing custom instructions
+            return;
+        }
+        
+        document.getElementById('agitation-instructions').value = instructions;
+        this.previewAgitationPattern();
+      }
+      
+      saveCombination() {
+        const name = document.getElementById('combination-name').value.trim();
+        const filmName = document.getElementById('film-name').value.trim();
+        const developerName = document.getElementById('developer-name').value.trim();
+        const dilutionRatio = document.getElementById('dilution-ratio').value.trim();
+        const baseTemperature = parseFloat(document.getElementById('base-temperature').value);
+        const baseTime = parseFloat(document.getElementById('base-time').value);
+        const agitationPattern = document.getElementById('agitation-pattern').value;
+        const agitationInstructions = document.getElementById('agitation-instructions').value.trim();
+        const includePresoak = document.getElementById('include-presoak').checked;
+        const stopBathDuration = parseInt(document.getElementById('stop-bath-duration').value);
+        const fixerDuration = parseInt(document.getElementById('fixer-duration').value);
+        const washDuration = parseInt(document.getElementById('wash-duration').value);
+        const includePhotoflo = document.getElementById('include-photoflo').checked;
+        const photofloDuration = parseInt(document.getElementById('photoflo-duration').value);
+        
+        // Validation
+        if (!name) {
+          this.showNotification('Please enter a combination name', 'error');
+          return;
+        }
+        
+        if (!filmName) {
+          this.showNotification('Please enter a film name', 'error');
+          return;
+        }
+        
+        if (!developerName) {
+          this.showNotification('Please enter a developer name', 'error');
+          return;
+        }
+        
+        if (!dilutionRatio) {
+          this.showNotification('Please enter a dilution ratio', 'error');
+          return;
+        }
+        
+        if (isNaN(baseTemperature) || baseTemperature < 10 || baseTemperature > 40) {
+          this.showNotification('Please enter a valid temperature between 10°C and 40°C', 'error');
+          return;
+        }
+        
+        if (isNaN(baseTime) || baseTime <= 0) {
+          this.showNotification('Please enter a valid development time', 'error');
+          return;
+        }
+        
+        // Check for duplicate names (excluding the one we're editing)
+        const existingCombo = this.userCombinations.find(c => 
+          c.name.toLowerCase() === name.toLowerCase() && 
+          c.id !== this.editingCombinationId
+        );
+        
+        if (existingCombo) {
+          this.showNotification(`A combination named "${name}" already exists`, 'error');
+          return;
+        }
+        
+        const comboData = {
+          id: this.editingCombinationId || this.generateId(),
+          name,
+          filmName,
+          developerName,
+          dilutionRatio,
+          baseTemperature,
+          baseTime,
+          agitationPattern,
+          agitationInstructions,
+          includePresoak,
+          stopBathDuration,
+          fixerDuration,
+          washDuration,
+          includePhotoflo,
+          photofloDuration,
+          created: new Date().toISOString(),
+          updated: new Date().toISOString()
+        };
+        
+        if (this.editingCombinationId) {
+          // Update existing combination
+          const index = this.userCombinations.findIndex(c => c.id === this.editingCombinationId);
+          if (index !== -1) {
+            this.userCombinations[index] = comboData;
+          }
+          this.showNotification(`Combination "${name}" updated successfully!`, 'success');
+        } else {
+          // Add new combination
+          this.userCombinations.push(comboData);
+          this.showNotification('Combination saved successfully!', 'success');
+        }
+        
+        if (this.saveCombinations()) {
+          this.updateCombinationDropdown();
+          this.renderCombinationsList();
+          
+          // Clear the form and exit edit mode
+          this.clearCombinationForm();
+          
+          // Switch to manage tab to see the updated list
+          this.switchTab('manage-tab');
+        }
       }
     }
 
