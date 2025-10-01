@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Film Development Assistant</title>
   <style>
-    /* All your existing CSS remains the same */
+    /* Enhanced CSS with improved visual design and accessibility */
     :root {
       --primary: #e74c3c;
       --primary-dark: #c0392b;
@@ -36,6 +36,7 @@
       --shadow: 0 4px 20px rgba(0,0,0,0.08);
       --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
       --shadow-dark: 0 10px 30px rgba(0, 0, 0, 0.3);
+      --focus-ring: 0 0 0 3px rgba(231, 76, 60, 0.15);
     }
     
     * {
@@ -75,18 +76,32 @@
       border-radius: var(--border-radius);
       color: white;
       box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .app-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255,255,255,0.3);
     }
     
     .app-header h1 {
       margin: 0 0 0.5rem 0;
       font-weight: 700;
       font-size: 2rem;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
     
     .app-header p {
       margin: 0;
       opacity: 0.9;
       font-size: 1rem;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.2);
     }
     
     .container {
@@ -135,6 +150,7 @@
     
     .input-group {
       margin-bottom: 1.25rem;
+      position: relative;
     }
     
     label {
@@ -163,7 +179,7 @@
     select:focus, input:focus, textarea:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+      box-shadow: var(--focus-ring);
     }
     
     .button-group {
@@ -187,6 +203,11 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+    }
+    
+    button:focus {
+      outline: none;
+      box-shadow: var(--focus-ring);
     }
     
     button:active:not(:disabled) {
@@ -235,6 +256,7 @@
       border-radius: var(--border-radius);
       border-left: 4px solid var(--primary);
       box-shadow: var(--shadow);
+      position: relative;
     }
     
     .timer {
@@ -287,6 +309,7 @@
       background: var(--primary-light);
       border-left: 4px solid var(--primary);
       transition: all 0.3s ease;
+      position: relative;
     }
     
     .step-title {
@@ -321,11 +344,16 @@
       font-weight: bold;
       font-size: 1.1rem;
       margin-top: 1rem;
+      background: var(--warning);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius-sm);
+      display: inline-block;
     }
     
     @keyframes pulse {
       0% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.7; }
       100% { opacity: 1; }
     }
     
@@ -537,14 +565,14 @@
 
     .timeline-label {
       font-size: 0.8rem;
-      margin-bottom: 0.70rem;
+      margin-bottom: 0.80rem;
       opacity: 0.7;
     }
 
     .agitation-marker {
       position: absolute;
       width: 6px;
-      height: 10px;
+      height:10px;
       background: var(--primary);
       border-radius: 50%;
       top: 4px;
@@ -563,7 +591,7 @@
       font-size: 0.5rem;
       background: var(--primary);
       color: white;
-      padding: 6px 10px;
+      padding: 2px 2px;
       border-radius: 4px;
       white-space: nowrap;
       opacity: 0;
@@ -800,6 +828,189 @@
       background: rgba(231, 76, 60, 0.2);
     }
     
+    /* NEW: Help tooltip styles */
+    .help-tooltip {
+      display: inline-block;
+      position: relative;
+      margin-left: 0.5rem;
+    }
+    
+    .help-icon {
+      width: 16px;
+      height: 16px;
+      background: var(--info);
+      color: white;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+      cursor: help;
+    }
+    
+    .tooltip-text {
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text-light);
+      color: white;
+      padding: 0.5rem;
+      border-radius: var(--border-radius-sm);
+      font-size: 0.8rem;
+      width: 200px;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .tooltip-text::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: var(--text-light) transparent transparent transparent;
+    }
+    
+    .help-tooltip:hover .tooltip-text {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .dark-mode .tooltip-text {
+      background: var(--text-dark);
+      color: var(--bg-dark);
+    }
+    
+    .dark-mode .tooltip-text::after {
+      border-color: var(--text-dark) transparent transparent transparent;
+    }
+    
+    /* NEW: Stats panel */
+    .stats-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    
+    .stat-card {
+      background: var(--primary-light);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      text-align: center;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    
+    /* NEW: Enhanced step visualization */
+    .step-visualization {
+      display: flex;
+      margin: 1rem 0;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+    
+    .step-visual {
+      flex: 0 0 auto;
+      width: 80px;
+      text-align: center;
+      margin-right: 0.5rem;
+    }
+    
+    .step-visual-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    
+    .step-visual.active .step-visual-circle {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .step-visual.completed .step-visual-circle {
+      background: var(--success);
+      color: white;
+    }
+    
+    .step-visual-label {
+      font-size: 0.7rem;
+      line-height: 1.2;
+    }
+    
+    /* NEW: Confirmation dialog */
+    .confirmation-dialog {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .confirmation-dialog.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .confirmation-content {
+      background: var(--card-light);
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      max-width: 400px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .confirmation-title {
+      margin-top: 0;
+      color: var(--primary);
+    }
+    
+    .confirmation-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .dark-mode .confirmation-content {
+      background: var(--card-dark);
+    }
+    
     @media (max-width: 768px) {
       body {
         padding: 1rem;
@@ -861,6 +1072,14 @@
       
       .progress-step:not(:last-child)::after {
         display: none;
+      }
+      
+      .stats-panel {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .confirmation-content {
+        padding: 1.5rem;
       }
     }
     
@@ -976,17 +1195,18 @@
     
     <div class="container">
       <div class="dark-mode-toggle">
-        <button class="secondary-btn" id="dark-mode-toggle">Toggle Dark Mode</button>
+        <button class="secondary-btn" id="dark-mode-toggle" aria-label="Toggle dark mode">Toggle Dark Mode</button>
       </div>
       
       <div class="tab-container">
-        <div class="tab active" data-tab="use-tab">Use Combination</div>
-        <div class="tab" data-tab="create-tab">Create/Edit Combination</div>
-        <div class="tab" data-tab="manage-tab">Manage Combinations</div>
+        <div class="tab active" data-tab="use-tab" role="tab" aria-selected="true" aria-controls="use-tab">Use Combination</div>
+        <div class="tab" data-tab="create-tab" role="tab" aria-selected="false" aria-controls="create-tab">Create/Edit Combination</div>
+        <div class="tab" data-tab="manage-tab" role="tab" aria-selected="false" aria-controls="manage-tab">Manage Combinations</div>
+        <div class="tab" data-tab="stats-tab" role="tab" aria-selected="false" aria-controls="stats-tab">Statistics</div>
       </div>
       
       <!-- Use Combination Tab -->
-      <div id="use-tab" class="tab-content active">
+      <div id="use-tab" class="tab-content active" role="tabpanel">
         <div class="input-group">
           <label for="saved-combination">Select Saved Combination</label>
           <select id="saved-combination">
@@ -1010,14 +1230,23 @@
         </div>
         
         <div class="input-group">
-          <label for="temperature">Temperature (°C)</label>
+          <label for="temperature">Temperature (°C)
+            <span class="help-tooltip">
+              <span class="help-icon">?</span>
+              <span class="tooltip-text">Adjusting temperature affects development time. The app automatically calculates time adjustments based on temperature changes.</span>
+            </span>
+          </label>
           <input type="number" id="temperature" min="10" max="40" step="0.5" value="20" />
           <div class="info-text" id="temp-adjustment-info"></div>
         </div>
 
         <div class="sound-toggle">
-          <input type="checkbox" id="sound-enabled" checked>
+          <input type="checkbox" id="sound-enabled" checked aria-describedby="sound-help">
           <label for="sound-enabled">Enable sound alerts</label>
+          <span class="help-tooltip">
+            <span class="help-icon">?</span>
+            <span class="tooltip-text" id="sound-help">Sound alerts notify you when it's time to agitate or when a step is complete.</span>
+          </span>
         </div>
         
         <!-- Overall Progress -->
@@ -1036,12 +1265,17 @@
           <!-- Progress steps will be populated by JavaScript -->
         </div>
         
+        <!-- Step Visualization -->
+        <div class="step-visualization hidden" id="step-visualization">
+          <!-- Step visualization will be populated by JavaScript -->
+        </div>
+        
         <div class="timer-display">
           <div class="timer-label">Current Step</div>
           <div id="current-step-name" class="timer">-</div>
           <div class="timer-label">Time Remaining</div>
           <div id="countdown" class="timer">-</div>
-          <div id="agitation-alert" class="timer-label agitation-alert hidden">AGITATE NOW! (8 inversions)</div>
+          <div id="agitation-alert" class="timer-label agitation-alert hidden" role="alert">AGITATE NOW! (8 inversions)</div>
         </div>
         
         <div class="button-group">
@@ -1083,7 +1317,7 @@
       </div>
       
       <!-- Create/Edit Combination Tab -->
-      <div id="create-tab" class="tab-content">
+      <div id="create-tab" class="tab-content" role="tabpanel">
         <div class="input-group">
           <label for="combination-name">Combination Name</label>
           <input type="text" id="combination-name" placeholder="e.g., HP5+ with HC-110" />
@@ -1202,7 +1436,7 @@
       </div>
       
       <!-- Manage Combinations Tab -->
-      <div id="manage-tab" class="tab-content">
+      <div id="manage-tab" class="tab-content" role="tabpanel">
         <div id="combinations-list">
           <!-- Saved combinations will be listed here -->
         </div>
@@ -1245,13 +1479,46 @@
           </div>
         </div>
       </div>
+      
+      <!-- Statistics Tab -->
+      <div id="stats-tab" class="tab-content" role="tabpanel">
+        <h2>Development Statistics</h2>
+        <div class="stats-panel" id="stats-panel">
+          <!-- Stats will be populated by JavaScript -->
+        </div>
+        
+        <div class="info-text" id="no-stats-message" style="display: none;">
+          No development sessions recorded yet. Start developing film to see your statistics here.
+        </div>
+        
+        <div class="input-group">
+          <button class="secondary-btn" id="clear-stats-btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+            Clear Statistics
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   
-  <div id="notification" class="notification"></div>
+  <!-- Confirmation Dialog -->
+  <div class="confirmation-dialog" id="confirmation-dialog" role="dialog" aria-labelledby="confirmation-title" aria-modal="true">
+    <div class="confirmation-content">
+      <h3 class="confirmation-title" id="confirmation-title">Confirm Action</h3>
+      <p id="confirmation-message">Are you sure you want to proceed?</p>
+      <div class="confirmation-buttons">
+        <button class="secondary-btn" id="confirmation-cancel">Cancel</button>
+        <button class="primary-btn" id="confirmation-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="notification" class="notification" role="alert" aria-live="polite"></div>
   
   <script>
-    // Main application class
+    // Enhanced Film Development Assistant with improved UX and performance
     class FilmDevelopmentAssistant {
       constructor() {
         this.userCombinations = [];
@@ -1279,6 +1546,8 @@
         };
         this.totalDuration = 0;
         this.elapsedTime = 0;
+        this.developmentHistory = [];
+        this.confirmationCallback = null;
         
         this.init();
       }
@@ -1286,20 +1555,31 @@
       init() {
         this.loadSettings();
         this.loadCombinations();
+        this.loadDevelopmentHistory();
         this.setupEventListeners();
         this.setupCollapsibleSections();
         this.updateCombinationDropdown();
         this.renderCombinationsList();
         this.renderQuickStartTemplates();
+        this.renderStatistics();
         this.applySettings();
         this.updateExportData();
         this.initAudio();
+        
+        // Set up keyboard navigation for tabs
+        this.setupKeyboardNavigation();
       }
       
       setupEventListeners() {
         // Tab navigation
         document.querySelectorAll('.tab').forEach(tab => {
           tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
+          tab.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              this.switchTab(tab.dataset.tab);
+            }
+          });
         });
         
         // Buttons
@@ -1315,10 +1595,15 @@
         document.getElementById('export-btn').addEventListener('click', () => this.exportData());
         document.getElementById('import-btn').addEventListener('click', () => this.importData());
         document.getElementById('reset-all-btn').addEventListener('click', () => this.resetAllData());
+        document.getElementById('clear-stats-btn').addEventListener('click', () => this.clearStatistics());
         document.getElementById('sound-enabled').addEventListener('change', (e) => {
           this.settings.soundEnabled = e.target.checked;
           this.saveSettings();
         });
+        
+        // Confirmation dialog
+        document.getElementById('confirmation-cancel').addEventListener('click', () => this.hideConfirmation());
+        document.getElementById('confirmation-confirm').addEventListener('click', () => this.confirmAction());
         
         // Combination selection
         document.getElementById('saved-combination').addEventListener('change', (e) => {
@@ -1349,6 +1634,35 @@
         
         // Handle beforeunload for cleanup
         window.addEventListener('beforeunload', () => this.cleanup());
+        
+        // Handle escape key for confirmation dialog
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.isConfirmationVisible()) {
+            this.hideConfirmation();
+          }
+        });
+      }
+      
+      setupKeyboardNavigation() {
+        // Add keyboard navigation for tabs
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Tab' && e.target.classList.contains('tab')) {
+            const tabs = Array.from(document.querySelectorAll('.tab'));
+            const currentIndex = tabs.indexOf(e.target);
+            let nextIndex;
+            
+            if (e.shiftKey) {
+              // Shift+Tab: move to previous tab
+              nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+            } else {
+              // Tab: move to next tab
+              nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+            }
+            
+            e.preventDefault();
+            tabs[nextIndex].focus();
+          }
+        });
       }
       
       setupCollapsibleSections() {
@@ -1368,10 +1682,15 @@
       }
       
       switchTab(tabId) {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(tab => {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+        });
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         
-        document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+        const activeTab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+        activeTab.classList.add('active');
+        activeTab.setAttribute('aria-selected', 'true');
         document.getElementById(tabId).classList.add('active');
         
         // Special handling for certain tabs
@@ -1383,7 +1702,181 @@
           if (!this.editingCombinationId) {
             this.clearCombinationForm();
           }
+        } else if (tabId === 'stats-tab') {
+          this.renderStatistics();
         }
+        
+        // Focus the first focusable element in the tab
+        setTimeout(() => {
+          const firstFocusable = document.querySelector(`#${tabId} button, #${tabId} input, #${tabId} select`);
+          if (firstFocusable) {
+            firstFocusable.focus();
+          }
+        }, 100);
+      }
+      
+      // Confirmation Dialog System
+      showConfirmation(message, callback) {
+        document.getElementById('confirmation-message').textContent = message;
+        document.getElementById('confirmation-dialog').classList.add('show');
+        this.confirmationCallback = callback;
+        
+        // Focus the cancel button for safety
+        setTimeout(() => {
+          document.getElementById('confirmation-cancel').focus();
+        }, 100);
+      }
+      
+      hideConfirmation() {
+        document.getElementById('confirmation-dialog').classList.remove('show');
+        this.confirmationCallback = null;
+      }
+      
+      isConfirmationVisible() {
+        return document.getElementById('confirmation-dialog').classList.contains('show');
+      }
+      
+      confirmAction() {
+        if (this.confirmationCallback) {
+          this.confirmationCallback();
+        }
+        this.hideConfirmation();
+      }
+      
+      // Development History & Statistics
+      loadDevelopmentHistory() {
+        const saved = localStorage.getItem('filmDevelopmentHistory');
+        if (saved) {
+          try {
+            this.developmentHistory = JSON.parse(saved);
+          } catch (e) {
+            console.error('Error loading development history:', e);
+            this.developmentHistory = [];
+          }
+        }
+      }
+      
+      saveDevelopmentHistory() {
+        try {
+          localStorage.setItem('filmDevelopmentHistory', JSON.stringify(this.developmentHistory));
+          return true;
+        } catch (e) {
+          console.error('Error saving development history:', e);
+          return false;
+        }
+      }
+      
+      recordDevelopmentSession(combination, duration) {
+        const session = {
+          id: this.generateId(),
+          combinationId: combination.id,
+          combinationName: combination.name,
+          date: new Date().toISOString(),
+          duration: duration,
+          steps: this.developmentPlan.length
+        };
+        
+        this.developmentHistory.unshift(session);
+        
+        // Keep only the last 50 sessions to prevent storage issues
+        if (this.developmentHistory.length > 50) {
+          this.developmentHistory = this.developmentHistory.slice(0, 50);
+        }
+        
+        this.saveDevelopmentHistory();
+      }
+      
+      renderStatistics() {
+        const container = document.getElementById('stats-panel');
+        const noStatsMessage = document.getElementById('no-stats-message');
+        
+        if (this.developmentHistory.length === 0) {
+          container.innerHTML = '';
+          noStatsMessage.style.display = 'block';
+          return;
+        }
+        
+        noStatsMessage.style.display = 'none';
+        
+        // Calculate statistics
+        const totalSessions = this.developmentHistory.length;
+        const totalDuration = this.developmentHistory.reduce((sum, session) => sum + session.duration, 0);
+        const avgDuration = totalDuration / totalSessions;
+        
+        // Find most used combination
+        const combinationCounts = {};
+        this.developmentHistory.forEach(session => {
+          combinationCounts[session.combinationName] = (combinationCounts[session.combinationName] || 0) + 1;
+        });
+        
+        let mostUsedCombination = '';
+        let maxCount = 0;
+        for (const [name, count] of Object.entries(combinationCounts)) {
+          if (count > maxCount) {
+            maxCount = count;
+            mostUsedCombination = name;
+          }
+        }
+        
+        container.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-value">${totalSessions}</div>
+            <div class="stat-label">Total Sessions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${Math.round(avgDuration / 60)}m</div>
+            <div class="stat-label">Avg. Duration</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${mostUsedCombination.split(' ')[0]}</div>
+            <div class="stat-label">Most Used</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${new Date(this.developmentHistory[0].date).toLocaleDateString()}</div>
+            <div class="stat-label">Last Session</div>
+          </div>
+        `;
+      }
+      
+      clearStatistics() {
+        this.showConfirmation('Are you sure you want to clear all development history? This cannot be undone.', () => {
+          this.developmentHistory = [];
+          this.saveDevelopmentHistory();
+          this.renderStatistics();
+          this.showNotification('Development history cleared', 'info');
+        });
+      }
+      
+      // Enhanced Step Visualization
+      createStepVisualization() {
+        const container = document.getElementById('step-visualization');
+        container.innerHTML = '';
+        container.classList.remove('hidden');
+        
+        this.developmentPlan.forEach((step, index) => {
+          const stepElement = document.createElement('div');
+          stepElement.className = 'step-visual';
+          stepElement.innerHTML = `
+            <div class="step-visual-circle">${index + 1}</div>
+            <div class="step-visual-label">${this.escapeHtml(step.name)}</div>
+          `;
+          container.appendChild(stepElement);
+        });
+        
+        this.updateStepVisualization();
+      }
+      
+      updateStepVisualization() {
+        const steps = document.querySelectorAll('.step-visual');
+        steps.forEach((step, index) => {
+          step.classList.remove('active', 'completed');
+          
+          if (index < this.currentStep) {
+            step.classList.add('completed');
+          } else if (index === this.currentStep) {
+            step.classList.add('active');
+          }
+        });
       }
       
       // Improved Audio System
@@ -2148,7 +2641,7 @@
             throw new Error('Invalid data format: missing combinations array');
           }
           
-          if (confirm(`This will import ${data.combinations.length} combination(s). Continue?`)) {
+          this.showConfirmation(`This will import ${data.combinations.length} combination(s). Continue?`, () => {
             // Merge with existing combinations (avoid duplicates by ID)
             data.combinations.forEach(newCombo => {
               const existingIndex = this.userCombinations.findIndex(c => c.id === newCombo.id);
@@ -2171,21 +2664,21 @@
               // Clear the import field
               document.getElementById('import-data').value = '';
             }
-          }
+          });
         } catch (e) {
           this.showNotification('Invalid JSON data: ' + e.message, 'error');
         }
       }
       
       resetAllData() {
-        if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
+        this.showConfirmation('Are you sure you want to reset ALL data? This cannot be undone.', () => {
           this.userCombinations = [];
           this.saveCombinations();
           this.updateCombinationDropdown();
           this.renderCombinationsList();
           this.updateExportData();
           this.showNotification('All data has been reset', 'info');
-        }
+        });
       }
       
       updateExportData() {
@@ -2226,6 +2719,7 @@
         
         // Create progress indicator
         this.createProgressIndicator();
+        this.createStepVisualization();
         
         this.startStep(this.currentStep);
         
@@ -2234,7 +2728,7 @@
         document.getElementById("resume-btn").style.display = "none";
         document.getElementById("next-step-btn").style.display = "none";
         
-        this.playBeep(600, 0.3);
+        this.playBeep('stepComplete');
       }
       
       pauseDevelopment() {
@@ -2245,7 +2739,7 @@
         document.getElementById("resume-btn").style.display = "";
         document.getElementById("countdown").classList.add("paused");
         
-        this.playBeep(400, 0.2);
+        this.playBeep('agitation');
       }
       
       resumeDevelopment() {
@@ -2266,7 +2760,7 @@
           this.startTimer(this.currentStep);
         }
         
-        this.playBeep(600, 0.2);
+        this.playBeep('stepComplete');
       }
       
       nextStep() {
@@ -2307,6 +2801,7 @@
         
         // Update progress indicator
         this.updateProgressIndicator();
+        this.updateStepVisualization();
         
         // Start the timer
         this.startTimer(stepIndex);
@@ -2365,6 +2860,7 @@
         
         // Update progress indicator
         this.updateProgressIndicator();
+        this.updateStepVisualization();
         
         // Show next step prompt
         if (this.currentStep < this.developmentPlan.length - 1) {
@@ -2418,11 +2914,16 @@
         
         // Update progress indicator to show all steps completed
         this.updateProgressIndicator();
+        this.updateStepVisualization();
         this.updateOverallProgress();
         
         // Reset timer tracking
         this.timerPausedDuration = 0;
         this.stepComplete = false;
+        
+        // Record development session
+        const totalDuration = this.developmentPlan.reduce((total, step) => total + step.duration, 0);
+        this.recordDevelopmentSession(this.currentCombination, totalDuration);
         
         // Play improved completion sound
         this.playBeep('developmentComplete');
@@ -2442,7 +2943,7 @@
       }
       
       resetCalculator() {
-        if (confirm('Are you sure you want to reset?')) {
+        this.showConfirmation('Are you sure you want to reset the current development?', () => {
           document.getElementById("current-step-name").innerText = "-";
           document.getElementById("countdown").innerText = "-";
           document.getElementById("development-steps").innerHTML = "";
@@ -2452,6 +2953,7 @@
           // Hide progress indicators
           document.getElementById("progress-indicator").classList.add("hidden");
           document.getElementById("overall-progress").classList.add("hidden");
+          document.getElementById("step-visualization").classList.add("hidden");
           
           this.clearTimers();
           
@@ -2470,7 +2972,7 @@
           document.getElementById("next-step-btn").style.display = "none";
           
           this.showNotification('Calculator reset', 'info');
-        }
+        });
       }
       
       displayDevelopmentSteps() {
@@ -2525,7 +3027,7 @@
         this.clearTimers();
       }
       
-      // YOUR ORIGINAL METHODS - KEPT INTACT
+      // Data persistence methods
       loadCombinations() {
         const saved = localStorage.getItem('filmDevelopmentCombinations');
         if (saved) {
@@ -2674,14 +3176,14 @@
       }
       
       deleteCombination(comboId) {
-        if (confirm('Are you sure you want to delete this combination?')) {
+        this.showConfirmation('Are you sure you want to delete this combination?', () => {
           this.userCombinations = this.userCombinations.filter(c => c.id !== comboId);
           if (this.saveCombinations()) {
             this.updateCombinationDropdown();
             this.renderCombinationsList();
             this.showNotification('Combination deleted', 'success');
           }
-        }
+        });
       }
       
       clearCombinationForm() {
