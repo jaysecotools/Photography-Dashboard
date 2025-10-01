@@ -1164,7 +1164,7 @@
           <div class="input-group">
             <label for="fixer-duration">Fixer Duration (seconds)</label>
             <input type="number" id="fixer-duration" min="30" max="600" value="300" />
-            <div class="info-text">Use rapid fixer with appropriate agitation</div>
+            <div class="info-text">Use rapid fixer with agitation - continuous first 30s, then every 30s</div>
           </div>
           
           <div class="input-group">
@@ -2261,107 +2261,162 @@
       }
       
       createDevelopmentPlan(combo) {
-        // Get current temperature
-        const currentTemp = parseFloat(document.getElementById('temperature').value) || combo.baseTemperature;
-        
-        // Calculate adjusted development time based on temperature
-        const adjustedDevTime = this.calculateAdjustedTime(combo.baseTime, combo.baseTemperature, currentTemp);
-        
-        // Convert minutes to seconds for timer
-        const devTimeSeconds = adjustedDevTime * 60;
-        
-        // Parse agitation instructions
-        const agitationPattern = this.parseAgitationInstructions(combo.agitationInstructions, devTimeSeconds);
-        
-        const developmentPlan = [];
-        
-        // For C-41 process (CineStill cS41), use different steps
-        if (combo.developerName.toLowerCase().includes('cinestill') || combo.isColorProcess) {
-          // C-41 process steps
-          developmentPlan.push({ 
-            name: "Developer", 
-            duration: devTimeSeconds, 
-            instructions: combo.agitationInstructions,
-            agitationPattern: agitationPattern
-          });
-          
-          developmentPlan.push({ 
-            name: "Blix", 
-            duration: 480, // 8 minutes for blix
-            instructions: "Agitate continuously first 30s, then 4 inversions every 30s",
-            agitationPattern: []
-          });
-          
-          developmentPlan.push({ 
-            name: "Wash", 
-            duration: 210, // 3.5 minutes for wash
-            instructions: "Rinse with water, change water periodically",
-            agitationPattern: []
-          });
-          
-          developmentPlan.push({ 
-            name: "Stabilizer", 
-            duration: 60, 
-            instructions: "Use stabilizer for 1 minute",
-            agitationPattern: []
-          });
-        } else {
-          // Standard B&W process
-          // Add pre-soak step only if included
-          if (combo.includePresoak !== false) {
-            developmentPlan.push({ 
-              name: "Pre-soak", 
-              duration: 60, 
-              instructions: "Soak film in water at same temperature as developer",
-              agitationPattern: []
-            });
-          }
-          
-          // Add developer step
-          developmentPlan.push({ 
-            name: "Developer", 
-            duration: devTimeSeconds, 
-            instructions: combo.agitationInstructions,
-            agitationPattern: agitationPattern
-          });
-          
-          // Add stop bath step
-          developmentPlan.push({ 
-            name: "Stop Bath", 
-              duration: combo.stopBathDuration || 60, 
-              instructions: "Use stop bath or water rinse with continuous agitation",
-            agitationPattern: []
-          });
-          
-          // Add fixer step
-          developmentPlan.push({ 
-            name: "Fixer", 
-            duration: combo.fixerDuration || 180, 
-            instructions: "Use rapid fixer with appropriate agitation",
-            agitationPattern: []
-          });
-          
-          // Add wash step
-          developmentPlan.push({ 
-            name: "Wash", 
-            duration: combo.washDuration || 300, 
-            instructions: "Rinse with water, change water periodically",
-            agitationPattern: []
-          });
-          
-          // Add photo-flo step only if included
-          if (combo.includePhotoflo !== false) {
-            developmentPlan.push({ 
-              name: "Photo-Flo", 
-              duration: combo.photofloDuration || 60, 
-              instructions: "Use wetting agent to prevent water spots",
-              agitationPattern: []
-            });
-          }
-        }
-        
-        return developmentPlan;
-      }
+  // Get current temperature
+  const currentTemp = parseFloat(document.getElementById('temperature').value) || combo.baseTemperature;
+  
+  // Calculate adjusted development time based on temperature
+  const adjustedDevTime = this.calculateAdjustedTime(combo.baseTime, combo.baseTemperature, currentTemp);
+  
+  // Convert minutes to seconds for timer
+  const devTimeSeconds = adjustedDevTime * 60;
+  
+  // Parse agitation instructions for developer
+  const agitationPattern = this.parseAgitationInstructions(combo.agitationInstructions, devTimeSeconds);
+  
+  // Create agitation pattern for Blix (every 30 seconds)
+  const blixAgitationPattern = this.createBlixAgitationPattern(480); // 8 minutes for blix
+  
+  // Create agitation pattern for Fixer (every 30 seconds)
+  const fixerAgitationPattern = this.createFixerAgitationPattern(combo.fixerDuration || 300);
+  
+  const developmentPlan = [];
+  
+  // For C-41 process (CineStill cS41), use different steps
+  if (combo.developerName.toLowerCase().includes('cinestill') || combo.isColorProcess) {
+    // C-41 process steps
+    developmentPlan.push({ 
+      name: "Developer", 
+      duration: devTimeSeconds, 
+      instructions: combo.agitationInstructions,
+      agitationPattern: agitationPattern
+    });
+    
+    developmentPlan.push({ 
+      name: "Blix", 
+      duration: 480, // 8 minutes for blix
+      instructions: "Agitate continuously first 30s, then 4 inversions every 30s",
+      agitationPattern: blixAgitationPattern // ADDED: agitation pattern for Blix
+    });
+    
+    developmentPlan.push({ 
+      name: "Wash", 
+      duration: 210, // 3.5 minutes for wash
+      instructions: "Rinse with water, change water periodically",
+      agitationPattern: []
+    });
+    
+    developmentPlan.push({ 
+      name: "Stabilizer", 
+      duration: 60, 
+      instructions: "Use stabilizer for 1 minute",
+      agitationPattern: []
+    });
+  } else {
+    // Standard B&W process
+    // Add pre-soak step only if included
+    if (combo.includePresoak !== false) {
+      developmentPlan.push({ 
+        name: "Pre-soak", 
+        duration: 60, 
+        instructions: "Soak film in water at same temperature as developer",
+        agitationPattern: []
+      });
+    }
+    
+    // Add developer step
+    developmentPlan.push({ 
+      name: "Developer", 
+      duration: devTimeSeconds, 
+      instructions: combo.agitationInstructions,
+      agitationPattern: agitationPattern
+    });
+    
+    // Add stop bath step
+    developmentPlan.push({ 
+      name: "Stop Bath", 
+      duration: combo.stopBathDuration || 60, 
+      instructions: "Use stop bath or water rinse with continuous agitation",
+      agitationPattern: []
+    });
+    
+    // Add fixer step WITH AGITATION
+    developmentPlan.push({ 
+      name: "Fixer", 
+      duration: combo.fixerDuration || 300, 
+      instructions: "Agitate continuously first 30s, then 4 inversions every 30s",
+      agitationPattern: fixerAgitationPattern // ADDED: agitation pattern for Fixer
+    });
+    
+    // Add wash step
+    developmentPlan.push({ 
+      name: "Wash", 
+      duration: combo.washDuration || 300, 
+      instructions: "Rinse with water, change water periodically",
+      agitationPattern: []
+    });
+    
+    // Add photo-flo step only if included
+    if (combo.includePhotoflo !== false) {
+      developmentPlan.push({ 
+        name: "Photo-Flo", 
+        duration: combo.photofloDuration || 60, 
+        instructions: "Use wetting agent to prevent water spots",
+        agitationPattern: []
+      });
+    }
+  }
+  
+  return developmentPlan;
+}
+
+// Add these new methods to create agitation patterns for Blix and Fixer:
+createBlixAgitationPattern(totalTime) {
+  const pattern = [0]; // Initial agitation at 0 seconds
+  
+  // Continuous agitation for first 30 seconds (every 10 seconds)
+  for (let t = 10; t <= 30 && t < totalTime; t += 10) {
+    pattern.push(t);
+  }
+  
+  // Then every 30 seconds
+  for (let t = 60; t < totalTime; t += 30) {
+    pattern.push(t);
+  }
+  
+  return pattern;
+}
+
+createFixerAgitationPattern(totalTime) {
+  const pattern = [0]; // Initial agitation at 0 seconds
+  
+  // Continuous agitation for first 30 seconds (every 10 seconds)
+  for (let t = 10; t <= 30 && t < totalTime; t += 10) {
+    pattern.push(t);
+  }
+  
+  // Then every 30 seconds
+  for (let t = 60; t < totalTime; t += 30) {
+    pattern.push(t);
+  }
+  
+  return pattern;
+}
+
+createFixerAgitationPattern(totalTime) {
+  const pattern = [0]; // Initial agitation at 0 seconds
+  
+  // Continuous agitation for first 30 seconds (every 10 seconds)
+  for (let t = 10; t <= 30 && t < totalTime; t += 10) {
+    pattern.push(t);
+  }
+  
+  // Then every 30 seconds
+  for (let t = 60; t < totalTime; t += 30) {
+    pattern.push(t);
+  }
+  
+  return pattern;
+}
       
       updateTemperatureAdjustment() {
         if (!this.currentCombination) return;
@@ -2764,28 +2819,29 @@
         }
       }
       
-      displayDevelopmentSteps() {
-        const stepsContainer = document.getElementById('development-steps');
-        stepsContainer.innerHTML = '<h2>Development Steps</h2>';
-        
-        this.developmentPlan.forEach((step, i) => {
-          const stepDiv = document.createElement('div');
-          stepDiv.className = 'step-display' + (i === this.currentStep ? ' current-step' : '');
-          
-          stepDiv.innerHTML = `
-            <div class="step-title">${this.escapeHtml(step.name)}</div>
-            <div class="step-duration">${this.formatTime(step.duration)}</div>
-            <div class="step-instructions">${this.escapeHtml(step.instructions)}</div>
-          `;
-          
-          // Add agitation timeline for developer step
-          if (step.name === "Developer" && step.agitationPattern.length > 0) {
-            this.createAgitationTimeline(step.agitationPattern, step.duration, stepDiv);
-          }
-          
-          stepsContainer.appendChild(stepDiv);
-        });
-      }
+displayDevelopmentSteps() {
+  const stepsContainer = document.getElementById('development-steps');
+  stepsContainer.innerHTML = '<h2>Development Steps</h2>';
+  
+  this.developmentPlan.forEach((step, i) => {
+    const stepDiv = document.createElement('div');
+    stepDiv.className = 'step-display' + (i === this.currentStep ? ' current-step' : '');
+    
+    stepDiv.innerHTML = `
+      <div class="step-title">${this.escapeHtml(step.name)}</div>
+      <div class="step-duration">${this.formatTime(step.duration)}</div>
+      <div class="step-instructions">${this.escapeHtml(step.instructions)}</div>
+    `;
+    
+    // Add agitation timeline for steps that have agitation patterns
+    if ((step.name === "Developer" || step.name === "Blix" || step.name === "Fixer") && 
+        step.agitationPattern.length > 0) {
+      this.createAgitationTimeline(step.agitationPattern, step.duration, stepDiv);
+    }
+    
+    stepsContainer.appendChild(stepDiv);
+  });
+}
       
       formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
