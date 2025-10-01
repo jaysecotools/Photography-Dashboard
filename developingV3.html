@@ -895,6 +895,88 @@
       color: white !important;
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
+
+/* Add these styles to your existing CSS for scrollable Quick-Start section */
+
+/* Make quick start templates scrollable on mobile */
+.quick-start-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+  max-height: 400px; /* Limit height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding-right: 5px; /* Space for scrollbar */
+}
+
+/* Custom scrollbar styling for better appearance */
+.quick-start-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.quick-start-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.quick-start-grid::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 3px;
+}
+
+.quick-start-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+/* Dark mode scrollbar */
+.dark-mode .quick-start-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .quick-start-grid::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+}
+
+/* Ensure collapsible content can handle scrolling */
+.collapsible-content {
+  overflow: hidden;
+  transition: max-height var(--transition-speed) ease;
+}
+
+.collapsible-section.expanded .collapsible-content {
+  overflow: visible; /* Allow scrolling when expanded */
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .quick-start-grid {
+    grid-template-columns: 1fr;
+    max-height: 300px; /* Smaller max-height on mobile */
+    gap: 0.5rem;
+  }
+  
+  /* Improve touch scrolling on mobile */
+  .quick-start-grid {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Adjust padding for better mobile appearance */
+  .quick-start-btn {
+    padding: 0.75rem;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .quick-start-grid {
+    max-height: 250px;
+  }
+}
+
+/* Ensure the templates are always accessible */
+#quick-start-templates {
+  min-height: 50px; /* Minimum height even when empty */
+}
   </style>
 </head>
 <body>
